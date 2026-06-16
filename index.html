@@ -4,63 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Processing System</title>
-    <!-- Menggunakan Tailwind CSS via CDN untuk tampilan modern -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Menggunakan library pdf-lib untuk memproses PDF -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+<body class="bg-gray-50 font-sans flex h-screen overflow-hidden">
 
-    <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">PDF Merger Simple</h1>
-        <p class="text-gray-600 mb-6 text-sm">Pilih 2 atau lebih file PDF untuk digabungkan langsung di browser Anda.</p>
-
-        <!-- Area Input File -->
-        <div class="border-2 border-dashed border-blue-400 rounded-lg p-6 mb-4 bg-blue-50/50">
-            <input type="file" id="pdfInput" multiple accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800">
+        <div class="p-5">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i data-lucide="file-text"></i>
+                </div>
+                <span class="font-bold text-white text-lg tracking-wide">PDF System</span>
+            </div>
+            
+            <nav class="space-y-1">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-white transition-all">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </button>
+                <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider px-4">PDF Tools</div>
+                <button onclick="switchTab('merge')" id="btn-merge" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+                    <i data-lucide="combine" class="w-4 h-4"></i> Merge PDF
+                </button>
+                <button onclick="switchTab('img2pdf')" id="btn-img2pdf" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
+                    <i data-lucide="image" class="w-4 h-4"></i> Image to PDF
+                </button>
+                <button onclick="alert('Fitur Demo: Lakukan pengembangan serupa menggunakan pdf-lib split')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white text-left text-slate-400/70 transition-all">
+                    <span class="flex items-center gap-3"><i data-lucide="scissors" class="w-4 h-4"></i> Split PDF</span>
+                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Lock</span>
+                </button>
+            </nav>
         </div>
+        <div class="p-4 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 PDF Processing System
+        </div>
+    </aside>
 
-        <!-- Tombol Proses -->
-        <button onclick="gabungkanPDF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 shadow-md">
-            Gabungkan PDF
-        </button>
-    </div>
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shrink-0">
+            <h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
+            <div class="flex items-center gap-2 text-sm text-gray-500">
+                <i data-lucide="shield-check" class="text-green-500 w-4 h-4"></i> Client-Side Processing (Aman)
+            </div>
+        </header>
 
-    <!-- Script Logika JavaScript -->
+        <div class="p-8 max-w-5xl w-full mx-auto content-space">
+            
+            <div id="tab-dashboard" class="tab-content block">
+                <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-sm mb-8">
+                    <h3 class="text-2xl font-bold mb-1">Selamat Datang di PDF System!</h3>
+                    <p class="text-blue-100 text-sm">Semua pemrosesan file dilakukan 100% di browser Anda. File tidak akan pernah diupload ke server mana pun.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="switchTab('merge')" class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs hover:shadow-md transition cursor-pointer group">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition">
+                            <i data-lucide="combine"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-1">Merge PDF</h4>
+                        <p class="text-gray-500 text-xs">Gabungkan dua atau lebih file PDF menjadi satu file utuh.</p>
+                    </div>
+                    <div onclick="switchTab('img2pdf')" class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs hover:shadow-md transition cursor-pointer group">
+                        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition">
+                            <i data-lucide="image"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-1">Image to PDF</h4>
+                        <p class="text-gray-500 text-xs">Ubah kumpulan gambar JPG/PNG Anda menjadi dokumen PDF.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-merge" class="tab-content hidden">
+                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-xl p-8 text-center bg-gray-50/50 cursor-pointer transition relative">
+                        <input type="file" id="mergeInput" multiple accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer" onchange="updateFileCount('mergeInput', 'mergeCount')" />
+                        <i data-lucide="upload-cloud" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-medium text-gray-700">Pilih atau Seret File PDF Anda di sini</p>
+                        <p class="text-xs text-gray-400 mt-1">Mendukung multi-selection (Minimal 2 file)</p>
+                    </div>
+                    <div id="mergeCount" class="text-sm text-gray-600 mt-3 hidden"></div>
+                    <button onclick="prosesMerge()" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-xs transition">Gabungkan Sekarang</button>
+                </div>
+            </div>
+
+            <div id="tab-img2pdf" class="tab-content hidden">
+                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="border-2 border-dashed border-purple-300 hover:border-purple-500 rounded-xl p-8 text-center bg-gray-50/50 cursor-pointer transition relative">
+                        <input type="file" id="imgInput" multiple accept="image/png, image/jpeg" class="absolute inset-0 opacity-0 cursor-pointer" onchange="updateFileCount('imgInput', 'imgCount')" />
+                        <i data-lucide="images" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
+                        <p class="text-sm font-medium text-gray-700">Pilih Kumpulan Gambar (PNG, JPG)</p>
+                        <p class="text-xs text-gray-400 mt-1">Setiap gambar akan dikonversi menjadi per halaman PDF</p>
+                    </div>
+                    <div id="imgCount" class="text-sm text-gray-600 mt-3 hidden"></div>
+                    <button onclick="prosesImgToPdf()" class="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg shadow-xs transition">Konversi Ke PDF</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
     <script>
-        async function gabungkanPDF() {
-            const input = document.getElementById('pdfInput');
-            const files = input.files;
+        // Inisialisasi Icon Lucide
+        lucide.createIcons();
 
-            if (files.length < 2) {
-                alert('Silakan pilih minimal 2 file PDF!');
-                return;
+        // 1. Logika Pindah Tab (Menu Navigasi)
+        function switchTab(tabName) {
+            // Sembunyikan semua konten tab
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.replace('block', 'hidden'));
+            // Hapus style aktif dari semua tombol navigasi
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-slate-800', 'text-white'));
+
+            // Tampilkan tab yang dipilih
+            document.getElementById(`tab-${tabName}`).classList.replace('hidden', 'block');
+            
+            // Beri style aktif pada tombol navigasi yang dipilih jika bukan dari dashboard card
+            const activeBtn = document.getElementById(`btn-${tabName}`);
+            if(activeBtn) activeBtn.classList.add('bg-slate-800', 'text-white');
+
+            // Ubah Title Header
+            const titles = { dashboard: 'Dashboard', merge: 'Merge PDF Tool', img2pdf: 'Image to PDF Converter' };
+            document.getElementById('page-title').innerText = titles[tabName] || 'PDF System';
+        }
+
+        // 2. Notifikasi Jumlah File yang Diunggah
+        function updateFileCount(inputId, targetId) {
+            const input = document.getElementById(inputId);
+            const indicator = document.getElementById(targetId);
+            if(input.files.length > 0) {
+                indicator.innerText = `✓ ${input.files.length} file berhasil dipilih.`;
+                indicator.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
             }
+        }
+
+        // 3. Fitur Utama: MERGE PDF
+        async function prosesMerge() {
+            const files = document.getElementById('mergeInput').files;
+            if (files.length < 2) return alert('Silakan pilih minimal 2 file PDF!');
 
             try {
-                // 1. Buat dokumen PDF baru yang kosong
-                const pdfBaru = await PDFLib.PDFDocument.create();
-
-                // 2. Baca dan masukkan halaman dari setiap file yang diunggah
+                const mergedPdf = await PDFLib.PDFDocument.create();
                 for (const file of files) {
                     const bytes = await file.arrayBuffer();
-                    const pdfDokumen = await PDFLib.PDFDocument.load(bytes);
-                    const halamanDiambil = await pdfBaru.copyPages(pdfDokumen, pdfDokumen.getPageIndices());
-                    halamanDiambil.forEach((hal) => pdfBaru.addPage(hal));
+                    const pdf = await PDFLib.PDFDocument.load(bytes);
+                    const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                    pages.forEach(page => mergedPdf.addPage(page));
                 }
-
-                // 3. Simpan dan unduh hasilnya
-                const pdfBytesSelesai = await pdfBaru.save();
-                const blob = new Blob([pdfBytesSelesai], { type: 'application/pdf' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'pdf-gabungan-anda.pdf';
-                link.click();
-
-            } catch (error) {
-                console.error(error);
-                alert('Terjadi kesalahan saat memproses file. Pastikan file yang Anda masukkan adalah PDF valid.');
+                const mergedBytes = await mergedPdf.save();
+                downloadBlob(mergedBytes, 'merged_document.pdf', 'application/pdf');
+            } catch (err) {
+                alert('Gagal menggabungkan PDF. Pastikan file tidak rusak.');
             }
+        }
+
+        // 4. Fitur Utama: IMAGE TO PDF
+        async function prosesImgToPdf() {
+            const files = document.getElementById('imgInput').files;
+            if (files.length === 0) return alert('Pilih minimal 1 gambar!');
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const base64 = await fileToBase64(file);
+                
+                if (i > 0) doc.addPage();
+                
+                // Mengatur gambar pas dengan ukuran halaman PDF standar (A4 estimasi)
+                doc.addImage(base64, 'JPEG', 10, 10, 190, 277);
+            }
+            doc.save('images_converted.pdf');
+        }
+
+        // Helper: Mengubah File ke Base64 (Untuk Gambar)
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Helper: Trigger Download File dari Memory Browser
+        function downloadBlob(bytes, filename, contentType) {
+            const blob = new Blob([bytes], { type: contentType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
         }
     </script>
 </body>
