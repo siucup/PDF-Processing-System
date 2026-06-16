@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Processing System</title>
+    <!-- Menggunakan Tailwind CSS via CDN untuk tampilan modern -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Menggunakan library pdf-lib untuk memproses PDF -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">PDF Merger Simple</h1>
+        <p class="text-gray-600 mb-6 text-sm">Pilih 2 atau lebih file PDF untuk digabungkan langsung di browser Anda.</p>
+
+        <!-- Area Input File -->
+        <div class="border-2 border-dashed border-blue-400 rounded-lg p-6 mb-4 bg-blue-50/50">
+            <input type="file" id="pdfInput" multiple accept=".pdf" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+        </div>
+
+        <!-- Tombol Proses -->
+        <button onclick="gabungkanPDF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition duration-200 shadow-md">
+            Gabungkan PDF
+        </button>
+    </div>
+
+    <!-- Script Logika JavaScript -->
+    <script>
+        async function gabungkanPDF() {
+            const input = document.getElementById('pdfInput');
+            const files = input.files;
+
+            if (files.length < 2) {
+                alert('Silakan pilih minimal 2 file PDF!');
+                return;
+            }
+
+            try {
+                // 1. Buat dokumen PDF baru yang kosong
+                const pdfBaru = await PDFLib.PDFDocument.create();
+
+                // 2. Baca dan masukkan halaman dari setiap file yang diunggah
+                for (const file of files) {
+                    const bytes = await file.arrayBuffer();
+                    const pdfDokumen = await PDFLib.PDFDocument.load(bytes);
+                    const halamanDiambil = await pdfBaru.copyPages(pdfDokumen, pdfDokumen.getPageIndices());
+                    halamanDiambil.forEach((hal) => pdfBaru.addPage(hal));
+                }
+
+                // 3. Simpan dan unduh hasilnya
+                const pdfBytesSelesai = await pdfBaru.save();
+                const blob = new Blob([pdfBytesSelesai], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'pdf-gabungan-anda.pdf';
+                link.click();
+
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan saat memproses file. Pastikan file yang Anda masukkan adalah PDF valid.');
+            }
+        }
+    </script>
+</body>
+</html>
