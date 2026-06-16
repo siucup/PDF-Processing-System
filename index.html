@@ -1,202 +1,3065 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Processing System</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outstanding Unit Report</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    --blue-primary: #0F4C81;
+    --blue-secondary: #1E6FB9;
+    --blue-light: #EAF4FF;
+    --bg: #F5F9FD;
+    --white: #FFFFFF;
+    --border: #D6E4F2;
+    --text-dark: #1F2937;
+    --text-secondary: #6B7280;
+    --success: #16A34A;
+    --danger: #DC2626;
+    --warning: #F59E0B;
+    --orange: #EA580C;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(15,76,129,0.10);
+    --shadow-lg: 0 6px 32px rgba(15,76,129,0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text-dark); min-height: 100vh; }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    position: sticky; top: 0; z-index: 1000;
+    background: linear-gradient(90deg, var(--blue-primary) 0%, var(--blue-secondary) 100%);
+    box-shadow: 0 2px 16px rgba(15,76,129,0.25);
+    padding: 0 16px;
+  }
+  .header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; gap: 10px;
+  }
+  .header-logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .logo-box { width: 34px; height: 34px; background: rgba(255,255,255,0.18); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255,255,255,0.3); flex-shrink: 0; }
+  .logo-box i { color: #fff; font-size: 17px; }
+  .logo-text { color: #fff; font-size: 11px; font-weight: 700; line-height: 1.2; }
+  .logo-text span { display: block; font-size: 9.5px; font-weight: 400; opacity: 0.75; }
+  .header-center { flex: 1; text-align: center; min-width: 0; }
+  .header-title { color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.2px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header-subtitle { color: rgba(255,255,255,0.75); font-size: 10px; margin-top: 1px; }
+  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+  .badge-demo { background: var(--orange); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; white-space: nowrap; }
+  .header-proto { color: rgba(255,255,255,0.6); font-size: 9px; text-align: right; display: none; }
+
+  /* ===== STATUS PILL & CONFIG ===== */
+  .status-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); border-radius: 99px; padding: 4px 11px; font-size: 11px; font-weight: 700; color: #fff; }
+  .live-dot { width: 7px; height: 7px; background: #16A34A; border-radius: 50%; animation: pulse-live 2s infinite; flex-shrink: 0; }
+  .status-pill.offline .live-dot { background: #DC2626; animation: none; }
+  @keyframes pulse-live { 0%,100% { box-shadow: 0 0 0 3px rgba(22,163,74,0.25); } 50% { box-shadow: 0 0 0 6px rgba(22,163,74,0.08); } }
+  .btn-cfg-gear { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+  .btn-cfg-gear:hover { background: rgba(255,255,255,0.26); }
+  .header-right-row { display: flex; align-items: center; gap: 6px; }
+  .skeleton-opt { color: var(--text-secondary); font-style: italic; }
+  .btn-generate:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ===== DRAFT ACTION ROW ===== */
+  .draft-action-row { display: flex; gap: 10px; margin-top: 10px; }
+  .btn-draft-action { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: 1; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; letter-spacing: 0.2px; text-align: center; }
+  .btn-draft-action:hover { border-color: var(--blue-secondary); color: var(--blue-primary); background: var(--blue-light); }
+  .btn-draft-reset { color: var(--danger); border-color: #fca5a5; background: #fff5f5; }
+  .btn-draft-reset:hover { border-color: var(--danger); background: #fee2e2; color: var(--danger); }
+
+  /* ===== MAIN ===== */
+  .main { max-width: 1200px; margin: 0 auto; padding: 16px 12px 60px; }
+
+  /* ===== CARD ===== */
+  .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+  .card-header { padding: 14px 16px 11px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: linear-gradient(90deg, var(--blue-light) 0%, var(--white) 100%); }
+  .card-header-icon { width: 34px; height: 34px; background: var(--blue-primary); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-header-icon i { color: #fff; font-size: 16px; }
+  .card-header-text h2 { font-size: 14px; font-weight: 700; color: var(--blue-primary); }
+  .card-header-text p { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+  .card-body { padding: 14px; }
+
+  .unit-block { margin-bottom: 0; }
+  .unit-block-body { padding: 4px 0; }
+
+  /* ===== FORM ROW ===== */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-group select { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; color: var(--text-dark); background: var(--white); transition: border-color 0.2s, box-shadow 0.2s; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+  .form-group input[type=date] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: 0; bottom: 0; }
+  .date-display-wrap { position: relative; width: 100%; }
+  .date-display-text { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; color: var(--text-dark); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: border-color 0.2s, box-shadow 0.2s; }
+  .date-display-text i { color: var(--text-secondary); font-size: 14px; flex-shrink: 0; }
+  .date-display-wrap:focus-within .date-display-text { border-color: var(--blue-secondary); box-shadow: 0 0 0 3px rgba(30,111,185,0.12); }
+  .date-display-text:hover { border-color: var(--blue-secondary); box-shadow: 0 0 0 3px rgba(30,111,185,0.12); }
+  .form-group select:focus { border-color: var(--blue-secondary); box-shadow: 0 0 0 3px rgba(30,111,185,0.12); }
+
+  /* ===== AREA BLOCK ===== */
+  .area-block { border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .area-block-header { background: #F8FBFF; padding: 9px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .area-name-input { border: none; border-bottom: 2px solid var(--border); border-radius: 0; padding: 2px 6px; font-size: 13px; font-weight: 700; color: var(--blue-primary); background: transparent; outline: none; min-width: 80px; max-width: 100%; flex: 1; transition: border-color 0.2s; }
+  .area-name-input:focus { border-bottom-color: var(--blue-secondary); background: var(--blue-light); border-radius: 4px 4px 0 0; }
+  .area-name-input::placeholder { color: #aaa; font-style: italic; font-weight: 400; }
+  .area-block-body { padding: 0; }
+
+  /* ===== FLOORPLAN ===== */
+  .floorplan-container { position: relative; width: 100%; max-width: 1050px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--border); background: #F8FBFF; cursor: default; user-select: none; }
+  .floorplan-container.picking { cursor: crosshair; box-shadow: 0 0 0 3px var(--blue-secondary), 0 4px 20px rgba(30,111,185,0.2); }
+  .floorplan-svg, .floorplan-image { width: 100%; display: block; transform: scale(1.25); transform-origin: center center; }
+  .markers-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scale(1.25); transform-origin: center center; }
+  .defect-marker { position: absolute; transform: translate(-50%, -50%); min-width: 26px; height: 26px; padding: 0 5px; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.22); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; cursor: pointer; pointer-events: all; transition: transform 0.15s, box-shadow 0.15s; z-index: 10; }
+  .defect-marker:hover { transform: translate(-50%,-50%) scale(1.18); box-shadow: 0 4px 16px rgba(0,0,0,0.28); }
+  /* Counter-scale marker di mobile agar tetap kecil meski layer di-scale 1.25 */
+  @media (max-width: 767px) {
+    .defect-marker { transform: translate(-50%, -50%) scale(0.72); min-width: 22px; height: 22px; font-size: 10px; padding: 0 4px; border-width: 1.5px; }
+    .defect-marker:hover { transform: translate(-50%,-50%) scale(0.85); }
+  }
+
+  /* ===== TABLE — DESKTOP ===== */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 580px; }
+  thead th { background: var(--blue-primary); color: #fff; font-size: 11.5px; font-weight: 700; padding: 9px 10px; text-align: left; letter-spacing: 0.3px; }
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  tbody tr:hover { background: var(--blue-light); }
+  tbody td { padding: 9px 10px; vertical-align: middle; }
+  .td-no { width: 36px; font-weight: 700; color: var(--blue-primary); text-align: center; }
+  .td-desc input { border: 1.5px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; width: 100%; min-width: 120px; color: var(--text-dark); transition: border-color 0.2s; outline: none; background: var(--white); }
+  .td-desc input:focus { border-color: var(--blue-secondary); box-shadow: 0 0 0 2px rgba(30,111,185,0.1); }
+  .td-area { width: 80px; min-width: 70px; max-width: 80px; overflow: hidden; }
+  .td-area-text { font-size: 12px; color: var(--text-dark); padding: 2px 0; font-weight: 500; }
+
+  /* ===== FOTO ===== */
+  .foto-cell-empty { display: flex; align-items: center; gap: 8px; }
+  .foto-add-label { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; border: 1.5px dashed var(--border); background: var(--white); color: var(--text-secondary); font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; user-select: none; -webkit-user-select: none; }
+  .foto-add-label:hover { border-color: var(--blue-secondary); color: var(--blue-secondary); background: var(--blue-light); }
+  .foto-cell-filled { display: flex; align-items: flex-start; gap: 0; position: relative; }
+  .foto-thumb-wrap { position: relative; display: inline-block; width: 72px; height: 72px; border-radius: 6px; border: 1.5px solid var(--border); }
+  .foto-thumb { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; display: block; transform: scale(1); border-radius: 5px; overflow: hidden; }
+  .foto-thumb-wrap:hover .foto-thumb { transform: scale(1.08); box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+  .foto-btn-x { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); border: 1.5px solid #fff; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; line-height: 1; }
+  .foto-btn-x:hover { background: #b91c1c; }
+  .foto-btn-change { position: absolute; top: -7px; left: -7px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue-secondary); border: 1.5px solid #fff; color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; line-height: 1; user-select: none; -webkit-user-select: none; }
+  .foto-btn-change:hover { background: var(--blue-primary); }
+  input[type=file] { display: none; }
+
+  /* ===== FOTO SOURCE PICKER POPUP (mobile) ===== */
+  #foto-source-overlay,
+  #batch-source-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9800; align-items: flex-end; justify-content: center; animation: fadeIn 0.18s ease; }
+  #foto-source-overlay.active,
+  #batch-source-overlay.active { display: flex; }
+  .foto-source-sheet { background: var(--white); border-radius: 16px 16px 0 0; padding: 16px 16px 32px; width: 100%; max-width: 480px; animation: sheetIn 0.22s ease; }
+  @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .foto-source-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-align: center; margin-bottom: 14px; letter-spacing: 0.3px; text-transform: uppercase; }
+  .foto-source-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .foto-source-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--white); color: var(--text-dark); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .foto-source-btn i { font-size: 28px; color: var(--blue-secondary); }
+  .foto-source-btn:hover, .foto-source-btn:active { border-color: var(--blue-secondary); background: var(--blue-light); }
+  .foto-source-cancel { margin-top: 10px; width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .foto-source-cancel:active { background: #f5f5f5; }
+
+  /* ===== DRAG & DROP ===== */
+  .foto-add-label.drag-over { border-color: var(--blue-secondary) !important; background: var(--blue-light) !important; color: var(--blue-secondary) !important; }
+
+  .foto-thumb-wrap.is-offline { border-color: var(--border); }
+
+  /* ===== BUTTONS ===== */
+  .btn-marker { padding: 5px 10px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--white); color: var(--text-secondary); font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+  .btn-marker:hover { border-color: var(--blue-secondary); color: var(--blue-secondary); background: var(--blue-light); }
+  .btn-marker.has-marker { background: #DCFCE7; border-color: var(--success); color: var(--success); }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; letter-spacing: 0.2px; }
+  .btn-primary { background: var(--blue-primary); color: #fff; }
+  .btn-primary:hover { background: #0a3a63; box-shadow: 0 4px 14px rgba(15,76,129,0.28); transform: translateY(-1px); }
+  .btn-outline { background: var(--white); color: var(--blue-primary); border: 1.5px solid var(--blue-primary); }
+  .btn-outline:hover { background: var(--blue-light); }
+  .btn-danger-sm { background: var(--danger); color: #fff; font-size: 12px; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; }
+  .btn-danger-sm:hover { background: #b91c1c; }
+  .btn-add-defect { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 8px; border: 1.5px dashed var(--blue-secondary); font-size: 13px; font-weight: 600; cursor: pointer; background: var(--blue-light); color: var(--blue-primary); transition: all 0.18s; margin: 12px 6px 12px 12px; }
+  .btn-add-defect:hover { background: #d4eaff; border-style: solid; }
+  .btn-batch-import { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 8px; border: 1.5px dashed #7C3AED; font-size: 13px; font-weight: 600; cursor: pointer; background: #F5F3FF; color: #7C3AED; transition: all 0.18s; margin: 12px 12px 12px 0; }
+  .btn-batch-import:hover { background: #EDE9FE; border-style: solid; }
+  .defect-action-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0; }
+
+  /* Validation: error border merah persisten pada field */
+  .field-error-persistent { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.15) !important; }
+  .label-error-persistent { border-color: var(--danger) !important; background: #fff5f5 !important; color: var(--danger) !important; }
+  .marker-error-persistent { border-color: var(--danger) !important; background: #fff5f5 !important; color: var(--danger) !important; box-shadow: 0 0 0 2px rgba(220,38,38,0.18) !important; }
+  .area-error-persistent { border-bottom-color: var(--danger) !important; background: #fff5f5 !important; }
+  .block-error-persistent { box-shadow: 0 0 0 2px var(--danger) !important; }
+
+  /* Validation summary banner */
+  .validation-banner { background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 8px; padding: 10px 14px; margin: 8px 12px 0; display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: #991B1B; font-weight: 500; line-height: 1.5; animation: fadeIn 0.2s ease; }
+  .validation-banner i { color: var(--danger); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .validation-banner ul { margin: 4px 0 0 16px; padding: 0; }
+  .validation-banner li { margin-bottom: 1px; }
+  .btn-add-area { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 8px; border: 1.5px dashed var(--border); font-size: 12px; font-weight: 600; cursor: pointer; background: #F8FBFF; color: var(--text-secondary); transition: all 0.18s; }
+  .btn-add-area:hover { border-color: var(--blue-secondary); color: var(--blue-primary); background: var(--blue-light); }
+  .btn-generate { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; background: linear-gradient(90deg, var(--blue-primary), var(--blue-secondary)); color: #fff; transition: all 0.2s; letter-spacing: 0.3px; box-shadow: 0 4px 16px rgba(15,76,129,0.25); }
+  .btn-generate:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(15,76,129,0.32); }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state { text-align: center; padding: 24px 16px; }
+  .empty-state i { font-size: 36px; color: var(--border); display: block; margin-bottom: 8px; }
+  .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; }
+  .empty-state p { font-size: 11.5px; color: var(--text-secondary); }
+
+  /* ===== TOAST ===== */
+  #toast-container { position: fixed; top: 68px; right: 12px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--text-dark); color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.22); display: flex; align-items: center; gap: 8px; min-width: 220px; max-width: min(300px, calc(100vw - 24px)); animation: toastIn 0.3s ease; }
+  .toast.success { background: var(--success); }
+  .toast.warning { background: var(--warning); }
+  .toast.info { background: var(--blue-primary); }
+  .toast.fade-out { animation: toastOut 0.3s ease forwards; }
+
+  /* ===== PHOTO MODAL ZOOM ===== */
+  #photo-modal-overlay { touch-action: none; overflow: hidden; }
+  .photo-zoom-wrap { position: relative; overflow: hidden; max-width: 90vw; max-height: 80vh; touch-action: none; display: flex; align-items: center; justify-content: center; }
+  .photo-zoom-wrap img { max-width: 90vw; max-height: 80vh; border-radius: 8px; display: block; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-drag: none; will-change: transform; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 5000; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; padding: 16px; }
+  .modal-overlay.active { display: flex; }
+  .modal-box { background: var(--white); border-radius: 14px; box-shadow: 0 8px 48px rgba(0,0,0,0.25); padding: 24px 20px; width: 100%; max-width: 400px; animation: modalIn 0.25s ease; }
+  .modal-title { font-size: 17px; font-weight: 800; color: var(--blue-primary); margin-bottom: 6px; }
+  .modal-subtitle { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 20px; }
+  .progress-bar-wrap { background: var(--border); border-radius: 20px; height: 10px; margin-bottom: 12px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--blue-primary), var(--blue-secondary)); width: 0%; transition: width 0.4s ease; }
+  .progress-label { font-size: 13px; font-weight: 700; color: var(--blue-primary); text-align: right; margin-bottom: 20px; }
+  .modal-done { display: none; text-align: center; padding: 8px 0; }
+  .modal-done-icon { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--success), #1e9450); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; box-shadow: 0 4px 16px rgba(22,163,74,0.3); }
+  .modal-done-icon i { font-size: 26px; color: #fff; margin: 0; display: block; }
+  .modal-done-icon.is-error { background: linear-gradient(135deg, var(--danger), #b91c1c); box-shadow: 0 4px 16px rgba(220,38,38,0.3); }
+  .modal-done h3 { font-size: 15px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+  .modal-done p { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 18px; }
+  .modal-footer { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .download-actions { display: flex; gap: 10px; margin-bottom: 10px; }
+  .btn-download { flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 16px 10px; border-radius: 10px; font-size: 12.5px; font-weight: 700; text-align: center; }
+  .btn-download i { font-size: 22px; margin: 0; }
+  .btn-download.btn-primary { background: linear-gradient(135deg, var(--blue-primary), var(--blue-secondary)); box-shadow: 0 3px 12px rgba(15,76,129,0.25); }
+  .btn-download.btn-outline { border: 1.5px solid var(--border); color: var(--blue-primary); background: var(--blue-light); }
+  .btn-download.btn-outline i { color: var(--success); }
+  .btn-download.btn-outline.btn-save-draft i { color: #065f46; }
+  .btn-download.btn-outline:hover { border-color: var(--blue-secondary); background: #ddeeff; }
+  .btn-close-full { width: 100%; justify-content: center; background: var(--white); color: var(--text-secondary); border: 1.5px solid var(--border); }
+  .btn-close-full:hover { background: #F5F9FD; color: var(--text-dark); border-color: #c7d7e8; }
+
+  /* ===== PICK OVERLAY ===== */
+  #pick-overlay { display: none; }
+
+  /* ===== FLOORPLAN PICK MODAL ===== */
+  #fp-pick-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 8000; align-items: center; justify-content: center; padding: 12px; animation: fadeIn 0.18s ease; }
+  #fp-pick-modal.active { display: flex; }
+  .fp-modal-box { background: var(--white); border-radius: 14px; box-shadow: 0 12px 60px rgba(0,0,0,0.45); width: 100%; max-width: min(1280px, calc(100vw - 24px)); height: calc(100vh - 24px); max-height: calc(100vh - 24px); overflow: hidden; display: flex; flex-direction: column; animation: fpModalIn 0.18s ease; }
+  /* CATATAN FIX MARKER BERGESER: dulu pakai animasi "modalIn" yang men-transform:scale(0.94->1)
+     pada .fp-modal-box. Saat JS mengukur getBoundingClientRect() container tepat di awal animasi
+     (sebelum scale selesai mencapai 1), ukuran yang terbaca masih lebih kecil dari ukuran final —
+     titik marker yang dihitung/disimpan jadi meleset & "loncat" tiap kali popup dibuka/ditutup.
+     fpModalIn di bawah ini HANYA fade opacity, tidak ada transform sama sekali, sehingga ukuran
+     container sudah akurat sejak frame pertama. */
+  .fp-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--border); background: linear-gradient(90deg, var(--blue-light), var(--white)); flex-shrink: 0; }
+  .fp-modal-title { font-size: 15px; font-weight: 800; color: var(--blue-primary); display: flex; align-items: center; gap: 8px; }
+  .fp-modal-hint { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .fp-modal-close { width: 34px; height: 34px; border-radius: 50%; background: #fee2e2; border: none; color: var(--danger); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .fp-modal-close:hover { background: #fca5a5; }
+  .fp-modal-body { flex: 1; overflow: auto; padding: 14px; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .fp-pick-container { position: relative; width: 100%; height: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--blue-secondary); box-shadow: 0 0 0 4px rgba(30,111,185,0.15); user-select: none; background: #F8FBFF; display: flex; align-items: center; justify-content: center; touch-action: none; }
+  .fp-pick-stage { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: crosshair; will-change: transform; }
+  .fp-pick-stage img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
+  .fp-pick-markers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+  .fp-defect-marker { position: absolute; transform: translate(-50%, -50%); min-width: 32px; height: 32px; padding: 0 6px; border-radius: 7px; border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.28); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; z-index: 10; }
+  .fp-defect-marker.active-pick { animation: pulse-marker 0.8s ease-in-out infinite alternate; }
+  @media (max-width: 767px) {
+    .fp-defect-marker { transform: translate(-50%, -50%) scale(0.65); min-width: 22px; height: 22px; font-size: 10px; padding: 0 4px; border-width: 2px; }
+    .fp-defect-marker.active-pick { animation: pulse-marker-sm 0.8s ease-in-out infinite alternate; }
+  }
+  @keyframes pulse-marker-sm { from { box-shadow: 0 0 0 0 rgba(30,111,185,0.5), 0 2px 6px rgba(0,0,0,0.28); } to { box-shadow: 0 0 0 6px rgba(30,111,185,0), 0 2px 6px rgba(0,0,0,0.28); } }
+  @keyframes pulse-marker { from { box-shadow: 0 0 0 0 rgba(30,111,185,0.5), 0 2px 10px rgba(0,0,0,0.28); } to { box-shadow: 0 0 0 10px rgba(30,111,185,0), 0 2px 10px rgba(0,0,0,0.28); } }
+
+  /* Mobile: fullscreen */
+  @media (max-width: 767px) {
+    #fp-pick-modal { padding: 0; }
+    .fp-modal-box { border-radius: 0; width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; height: 100dvh; max-height: 100dvh; }
+    .fp-modal-header { padding: 10px 14px; }
+    .fp-modal-title { font-size: 13px; }
+    .fp-modal-hint { font-size: 11px; }
+    .fp-modal-body { padding: 8px; }
+  }
+
+  /* ===== MOBILE CARD DEFECT ===== */
+  .defect-card { display: none; }
+
+  /* ===== RESPONSIVE BREAKPOINTS ===== */
+  @media (min-width: 768px) {
+    .site-header { padding: 0 24px; }
+    .header-inner { height: 64px; }
+    .logo-box { width: 40px; height: 40px; }
+    .logo-box i { font-size: 20px; }
+    .logo-text { font-size: 12px; }
+    .logo-text span { font-size: 10px; }
+    .header-title { font-size: 18px; }
+    .header-subtitle { font-size: 11.5px; }
+    .badge-demo { font-size: 11px; padding: 2px 10px; }
+    .header-proto { display: block; }
+    .main { padding: 24px 16px 60px; }
+    .card-body { padding: 20px; }
+    .form-row { gap: 14px; }
+  }
+
+  @media (max-width: 767px) {
+    /* Form: 2 kolom di atas, tanggal penuh */
+    .form-row { grid-template-columns: 1fr 1fr; }
+    .form-row .form-group:last-child { grid-column: 1 / -1; }
+
+    /* Floorplan lebih kecil di mobile */
+    .floorplan-container { max-width: 100%; }
+    .floorplan-wrap { padding: 10px 10px 6px; }
+
+    /* Table → Card view di mobile */
+    .table-wrap { overflow-x: visible; }
+    table { display: none; }
+    .defect-card { display: block; }
+    .dc-item { background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .dc-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--blue-light); border-bottom: 1px solid var(--border); }
+    .dc-num { font-weight: 800; color: var(--blue-primary); font-size: 13px; }
+    .dc-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+    .dc-row { display: flex; flex-direction: column; gap: 4px; }
+    .dc-label { font-size: 10.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
+    .dc-input { border: 1.5px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 14px; width: 100%; color: var(--text-dark); outline: none; background: var(--white); font-family: inherit; }
+    .dc-input:focus { border-color: var(--blue-secondary); box-shadow: 0 0 0 2px rgba(30,111,185,0.1); }
+    .dc-foto-row { display: flex; align-items: center; gap: 10px; }
+    .dc-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .btn-add-defect { margin: 10px 12px; }
+    .btn-marker { font-size: 12px; padding: 7px 12px; }
+
+    /* Modal footer stack */
+    .modal-footer { flex-direction: column; }
+    .modal-footer .btn { width: 100%; justify-content: center; }
+
+    /* Toast lebih kecil */
+    #toast-container { right: 8px; left: 8px; }
+    .toast { min-width: 0; max-width: 100%; font-size: 12.5px; }
+  }
+
+  @media (max-width: 400px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-row .form-group:last-child { grid-column: auto; }
+    .header-logo .logo-text { display: none; }
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+  @keyframes fpModalIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(30px); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes highlightPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(220,53,69,0.5); } 50% { box-shadow: 0 0 0 6px rgba(220,53,69,0.18); } }
+  .field-error-highlight { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,53,69,0.18) !important; animation: highlightPulse 1s ease-in-out 3; }
+  .area-name-input.field-error-highlight { border-bottom-color: var(--danger) !important; }
+  .block-error-highlight { outline: 2px solid var(--danger); outline-offset: 2px; border-radius: 8px; animation: highlightPulse 1s ease-in-out 3; }
+
+  /* ===== ERROR STATE - DESC INPUT ===== */
+  .desc-error { border-color: var(--danger) !important; box-shadow: 0 0 0 2px rgba(220,38,38,0.18) !important; background: #fff5f5 !important; animation: highlightPulse 1s ease-in-out 3; }
+  .dc-input.desc-error { border-color: var(--danger) !important; box-shadow: 0 0 0 2px rgba(220,38,38,0.18) !important; background: #fff5f5 !important; }
+
+  /* ===== ERROR STATE - MARKER BUTTON ===== */
+  .btn-marker.marker-error { border-color: var(--danger) !important; color: var(--danger) !important; background: #fff5f5 !important; animation: highlightPulse 1s ease-in-out 3; }
+  .btn-marker.marker-error i { color: var(--danger); }
+
+  /* ===== ERROR STATE - AREA NAME ===== */
+  .area-name-input.area-error { border-bottom-color: var(--danger) !important; background: #fff5f5 !important; border-radius: 4px 4px 0 0; animation: highlightPulse 1s ease-in-out 3; }
+</style>
 </head>
-<body class="bg-gray-50 font-sans flex h-screen overflow-hidden">
+<body>
 
-    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between border-r border-slate-800">
-        <div class="p-5">
-            <div class="flex items-center gap-3 mb-8">
-                <div class="bg-blue-600 p-2 rounded-lg text-white">
-                    <i data-lucide="file-text"></i>
-                </div>
-                <span class="font-bold text-white text-lg tracking-wide">PDF System</span>
-            </div>
-            
-            <nav class="space-y-1">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium bg-slate-800 text-white transition-all">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-                </button>
-                <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider px-4">PDF Tools</div>
-                <button onclick="switchTab('merge')" id="btn-merge" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
-                    <i data-lucide="combine" class="w-4 h-4"></i> Merge PDF
-                </button>
-                <button onclick="switchTab('img2pdf')" id="btn-img2pdf" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-all">
-                    <i data-lucide="image" class="w-4 h-4"></i> Image to PDF
-                </button>
-                <button onclick="alert('Fitur Demo: Lakukan pengembangan serupa menggunakan pdf-lib split')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white text-left text-slate-400/70 transition-all">
-                    <span class="flex items-center gap-3"><i data-lucide="scissors" class="w-4 h-4"></i> Split PDF</span>
-                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Lock</span>
-                </button>
-            </nav>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="logo-box"><i class="bi bi-building-fill-check"></i></div>
+      <div class="logo-text">BAPL NRC<span>Project Management</span></div>
+    </div>
+    <div class="header-center">
+      <div class="header-title">OUTSTANDING UNIT REPORT</div>
+      <div class="header-subtitle">Monitoring Outstanding Unit</div>
+    </div>
+    <div class="header-right">
+      <div class="header-right-row">
+        <div class="status-pill" id="status-pill"><div class="live-dot"></div><span id="status-pill-text">Mengecek...</span></div>
+        <button class="btn-cfg-gear" onclick="openBackendConfig()" title="Konfigurasi Backend URL" style="display:none;"><i class="bi bi-gear-fill"></i></button>
+      </div>
+      <span class="header-proto" id="header-proto-text"></span>
+    </div>
+  </div>
+</header>
+
+<div id="toast-container"></div>
+
+<div id="pick-overlay">
+  <i class="bi bi-crosshair"></i> Klik lokasi defect pada denah —
+  <button onclick="cancelPick()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:12px;border-radius:4px;padding:2px 8px;cursor:pointer;margin-left:6px;">Batal</button>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon"><i class="bi bi-building"></i></div>
+      <div class="card-header-text">
+        <h2>Informasi Unit</h2>
+        <p>Data utama unit dan area yang akan diperiksa</p>
+      </div>
+    </div>
+    <div class="card-body" id="unit-blocks-container"></div>
+  </div>
+
+  <button class="btn-generate" id="btn-generate" onclick="openGenModal()">
+    <i class="bi bi-file-earmark-arrow-down-fill"></i> Generate Outstanding Report
+  </button>
+
+  <div class="draft-action-row" id="draft-action-row">
+    <label class="btn-draft-action" for="upload-draft-input" title="Muat data dari file JSON draft">
+      <i class="bi bi-upload"></i> Upload Draft
+    </label>
+    <input type="file" id="upload-draft-input" accept=".json" onchange="loadDraft(this)">
+    <button class="btn-draft-action btn-draft-reset" onclick="confirmReset()" title="Hapus semua data laporan">
+      <i class="bi bi-arrow-counterclockwise"></i> Reset
+    </button>
+  </div>
+</div>
+
+<!-- GENERATE MODAL -->
+<div class="modal-overlay" id="gen-modal">
+  <div class="modal-box">
+    <div id="gen-progress-view">
+      <div class="modal-title" id="gen-progress-title">Membuat Laporan...</div>
+      <div class="modal-subtitle" id="gen-progress-subtitle">Menyiapkan data laporan outstanding unit</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="gen-progress-fill"></div></div>
+      <div class="progress-label" id="gen-progress-label">0%</div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="gen-cancel-btn" onclick="cancelGenerate()"><i class="bi bi-x-circle"></i> Batalkan</button>
+      </div>
+    </div>
+    <div class="modal-done" id="gen-done-view">
+      <div class="modal-done-icon"><i class="bi bi-check-lg"></i></div>
+      <h3>Laporan Berhasil Dibuat</h3>
+      <p>File siap untuk diunduh</p>
+      <div class="download-actions">
+        <button class="btn btn-download btn-primary" onclick="downloadReportFile('pdf')"><i class="bi bi-filetype-pdf"></i> Download PDF</button>
+        <button class="btn btn-download btn-outline" onclick="saveDraft()"><i class="bi bi-floppy-fill"></i> Save Draft</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-close-full" onclick="closeGenModal()"><i class="bi bi-x"></i> Tutup</button>
+      </div>
+    </div>
+    <div class="modal-done" id="gen-error-view" style="display:none;">
+      <div class="modal-done-icon is-error"><i class="bi bi-exclamation-lg"></i></div>
+      <h3>Gagal Membuat Laporan</h3>
+      <p id="gen-error-msg">Terjadi kesalahan saat memproses laporan.</p>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="retryGenerate()"><i class="bi bi-arrow-repeat"></i> Coba Lagi</button>
+        <button class="btn btn-outline" onclick="closeGenModal()"><i class="bi bi-x"></i> Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PHOTO MODAL -->
+<div class="modal-overlay" id="photo-modal-overlay" style="background:rgba(0,0,0,0.75);">
+  <div style="position:relative;">
+    <div class="photo-zoom-wrap" id="photo-zoom-wrap">
+      <img id="photo-modal-img" src="" alt="preview" style="max-width:90vw;max-height:80vh;border-radius:8px;display:block;margin:0 auto;">
+    </div>
+    <button onclick="closePhotoModal()" style="position:absolute;top:-14px;right:-14px;width:32px;height:32px;border-radius:50%;background:var(--danger);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;"><i class="bi bi-x"></i></button>
+  </div>
+</div>
+
+<!-- FLOORPLAN PICK MODAL -->
+<div id="fp-pick-modal">
+  <div class="fp-modal-box">
+    <div class="fp-modal-header">
+      <div>
+        <div class="fp-modal-title"><i class="bi bi-crosshair"></i> Pilih Lokasi Defect</div>
+        <div class="fp-modal-hint">Ketuk pada denah untuk menempatkan/memindah marker — bisa diulang berkali-kali, lalu tekan ✕ untuk simpan &amp; tutup</div>
+      </div>
+      <button class="fp-modal-close" onclick="cancelPickModal()" title="Simpan &amp; Tutup"><i class="bi bi-check2"></i></button>
+    </div>
+    <div class="fp-modal-body">
+      <div class="fp-pick-container" id="fp-pick-container">
+        <div class="fp-pick-stage" id="fp-pick-stage">
+          <img id="fp-pick-img" src="" alt="Denah Unit" crossorigin="anonymous">
         </div>
-        <div class="p-4 border-t border-slate-800 text-center text-xs text-slate-500">
-            &copy; 2026 PDF Processing System
-        </div>
-    </aside>
+        <!-- Markers layer di luar stage agar tidak ikut zoom/pan transform -->
+        <div class="fp-pick-markers" id="fp-pick-markers"></div>
+      </div>
+    </div>
+    <div class="fp-modal-hint" style="text-align:center;padding:6px 14px 10px;color:var(--text-secondary);font-size:12px;">
+      <i class="bi bi-zoom-in"></i> Cubit (pinch) atau scroll untuk zoom denah, geser untuk pan
+    </div>
+  </div>
+</div>
 
-    <main class="flex-1 flex flex-col overflow-y-auto">
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shrink-0">
-            <h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
-            <div class="flex items-center gap-2 text-sm text-gray-500">
-                <i data-lucide="shield-check" class="text-green-500 w-4 h-4"></i> Client-Side Processing (Aman)
-            </div>
-        </header>
+<!-- FOTO SOURCE PICKER (mobile: kamera vs file) -->
+<div id="foto-source-overlay">
+  <div class="foto-source-sheet">
+    <div class="foto-source-title">Pilih Sumber Foto</div>
+    <div class="foto-source-btns">
+      <button class="foto-source-btn" onclick="fotoSourcePick('camera')">
+        <i class="bi bi-camera-fill"></i> Kamera
+      </button>
+      <button class="foto-source-btn" onclick="fotoSourcePick('file')">
+        <i class="bi bi-folder2-open"></i> File / Galeri
+      </button>
+    </div>
+    <button class="foto-source-cancel" onclick="closeFotoSourcePicker()">Batal</button>
+  </div>
+</div>
 
-        <div class="p-8 max-w-5xl w-full mx-auto content-space">
-            
-            <div id="tab-dashboard" class="tab-content block">
-                <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-sm mb-8">
-                    <h3 class="text-2xl font-bold mb-1">Selamat Datang di PDF System!</h3>
-                    <p class="text-blue-100 text-sm">Semua pemrosesan file dilakukan 100% di browser Anda. File tidak akan pernah diupload ke server mana pun.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div onclick="switchTab('merge')" class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs hover:shadow-md transition cursor-pointer group">
-                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition">
-                            <i data-lucide="combine"></i>
-                        </div>
-                        <h4 class="font-bold text-gray-800 mb-1">Merge PDF</h4>
-                        <p class="text-gray-500 text-xs">Gabungkan dua atau lebih file PDF menjadi satu file utuh.</p>
-                    </div>
-                    <div onclick="switchTab('img2pdf')" class="bg-white p-6 rounded-xl border border-gray-200 shadow-xs hover:shadow-md transition cursor-pointer group">
-                        <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition">
-                            <i data-lucide="image"></i>
-                        </div>
-                        <h4 class="font-bold text-gray-800 mb-1">Image to PDF</h4>
-                        <p class="text-gray-500 text-xs">Ubah kumpulan gambar JPG/PNG Anda menjadi dokumen PDF.</p>
-                    </div>
-                </div>
-            </div>
+<!-- BATCH SOURCE PICKER (mobile: kamera loop vs galeri multiple) -->
+<div id="batch-source-overlay">
+  <div class="foto-source-sheet">
+    <div class="foto-source-title">insert multi foto</div>
+    <div class="foto-source-btns">
+      <button class="foto-source-btn" onclick="batchSourcePick('camera')">
+        <i class="bi bi-camera-fill"></i> Kamera
+        <span style="font-size:10px;color:var(--text-secondary);font-weight:400;margin-top:-4px;">foto satu per satu</span>
+      </button>
+      <button class="foto-source-btn" onclick="batchSourcePick('gallery')">
+        <i class="bi bi-images"></i> Galeri
+        <span style="font-size:10px;color:var(--text-secondary);font-weight:400;margin-top:-4px;">pilih banyak sekaligus</span>
+      </button>
+    </div>
+    <button class="foto-source-cancel" onclick="closeBatchSourcePicker()">Batal</button>
+  </div>
+</div>
 
-            <div id="tab-merge" class="tab-content hidden">
-                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-xl p-8 text-center bg-gray-50/50 cursor-pointer transition relative">
-                        <input type="file" id="mergeInput" multiple accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer" onchange="updateFileCount('mergeInput', 'mergeCount')" />
-                        <i data-lucide="upload-cloud" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
-                        <p class="text-sm font-medium text-gray-700">Pilih atau Seret File PDF Anda di sini</p>
-                        <p class="text-xs text-gray-400 mt-1">Mendukung multi-selection (Minimal 2 file)</p>
-                    </div>
-                    <div id="mergeCount" class="text-sm text-gray-600 mt-3 hidden"></div>
-                    <button onclick="prosesMerge()" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg shadow-xs transition">Gabungkan Sekarang</button>
-                </div>
-            </div>
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG - satu-satunya tempat untuk URL backend
+// ══════════════════════════════════════════════
+const CONFIG = {
+  DEFAULT_API_BASE: 'https://api.qcdefect.online',
+  get API_BASE() {
+    return localStorage.getItem('OUR_API_BASE') || this.DEFAULT_API_BASE;
+  }
+};
 
-            <div id="tab-img2pdf" class="tab-content hidden">
-                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="border-2 border-dashed border-purple-300 hover:border-purple-500 rounded-xl p-8 text-center bg-gray-50/50 cursor-pointer transition relative">
-                        <input type="file" id="imgInput" multiple accept="image/png, image/jpeg" class="absolute inset-0 opacity-0 cursor-pointer" onchange="updateFileCount('imgInput', 'imgCount')" />
-                        <i data-lucide="images" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
-                        <p class="text-sm font-medium text-gray-700">Pilih Kumpulan Gambar (PNG, JPG)</p>
-                        <p class="text-xs text-gray-400 mt-1">Setiap gambar akan dikonversi menjadi per halaman PDF</p>
-                    </div>
-                    <div id="imgCount" class="text-sm text-gray-600 mt-3 hidden"></div>
-                    <button onclick="prosesImgToPdf()" class="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg shadow-xs transition">Konversi Ke PDF</button>
-                </div>
-            </div>
+function api(path) {
+  return CONFIG.API_BASE + path;
+}
 
-        </div>
-    </main>
+// ── Session persistence ──
+const SESSION_KEY = 'oustanding_report_session';
 
-    <script>
-        // Inisialisasi Icon Lucide
-        lucide.createIcons();
+function saveSession() {
+  try {
+    const s = { unitBlocks: unitBlocks, jobId: jobId, t0: t0 };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  } catch (_) {}
+}
 
-        // 1. Logika Pindah Tab (Menu Navigasi)
-        function switchTab(tabName) {
-            // Sembunyikan semua konten tab
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.replace('block', 'hidden'));
-            // Hapus style aktif dari semua tombol navigasi
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-slate-800', 'text-white'));
+function clearSession() {
+  try { sessionStorage.removeItem(SESSION_KEY); } catch (_) {}
+}
 
-            // Tampilkan tab yang dipilih
-            document.getElementById(`tab-${tabName}`).classList.replace('hidden', 'block');
-            
-            // Beri style aktif pada tombol navigasi yang dipilih jika bukan dari dashboard card
-            const activeBtn = document.getElementById(`btn-${tabName}`);
-            if(activeBtn) activeBtn.classList.add('bg-slate-800', 'text-white');
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) { return null; }
+}
 
-            // Ubah Title Header
-            const titles = { dashboard: 'Dashboard', merge: 'Merge PDF Tool', img2pdf: 'Image to PDF Converter' };
-            document.getElementById('page-title').innerText = titles[tabName] || 'PDF System';
+function formatTanggal(val) {
+  if (!val) return '';
+  var d = new Date(val + 'T00:00:00');
+  var bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// ── State ──
+var TOWERS = [
+  { value: 'TOWER 1', label: 'TOWER 1' },
+  { value: 'TOWER 2', label: 'TOWER 2' }
+];                                 // daftar tetap (hardcode)
+var TOWER_UNITS = {                // daftar unit tetap per tower (hardcode)
+  'TOWER 1': ['01','02','03','05','06','07','08','09','10','11'],
+  'TOWER 2': ['18','19','20','21','23','25','26','27','28','29']
+};
+var TOWER_FLOORS = {               // daftar lantai per tower (hardcode)
+  'TOWER 1': ['GF','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25'],
+  'TOWER 2': ['GF','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32']
+};
+var TOWER_UNITS_CACHE = {};       // tower -> [unit,...]
+var MARKER_COLORS = [
+  '#DC2626', '#1E6FB9', '#16A34A', '#F59E0B', '#7C3AED',
+  '#0891B2', '#DB2777', '#65A30D', '#EA580C', '#4F46E5',
+  '#0D9488', '#CA8A04', '#9333EA', '#E11D48', '#2563EB',
+  '#15803D', '#B45309', '#6D28D9', '#0E7490', '#BE123C',
+  '#4D7C0F', '#C2410C', '#1D4ED8', '#A21CAF', '#047857',
+  '#92400E', '#5B21B6', '#0369A1', '#9F1239', '#3F6212'
+];
+// Marker tampil sebagai badge warna + nomor (bukan simbol bulat bernomor)
+var MARKER_CIRCLES = [];
+
+var unitBlocks = [];
+var pickingInfo = null;
+var jobId = null;
+var downloadFileName = null;
+var t0 = null;
+var pollIv = null;
+var cancelRequested = false;
+
+function uid() { return Math.random().toString(36).slice(2,10); }
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════
+//  STATUS PILL
+// ══════════════════════════════════════════════
+function setStatusPill(online) {
+  var pill = document.getElementById('status-pill');
+  var text = document.getElementById('status-pill-text');
+  if (!pill || !text) return;
+  if (online) {
+    pill.classList.remove('offline');
+    text.textContent = 'Siap';
+  } else {
+    pill.classList.add('offline');
+    text.textContent = 'Offline';
+  }
+}
+
+async function checkBackendStatus() {
+  try {
+    var res = await fetch(api('/status'), { signal: AbortSignal.timeout(5000) });
+    var data = await res.json();
+    setStatusPill(data && data.success === true);
+    return data && data.success === true;
+  } catch (_) {
+    setStatusPill(false);
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  BACKEND CONFIG MODAL
+// ══════════════════════════════════════════════
+async function openBackendConfig() {
+  var current = CONFIG.API_BASE;
+  var isDefault = !localStorage.getItem('OUR_API_BASE');
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cfg-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9500;display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit';
+
+  overlay.innerHTML = [
+    '<div style="background:#fff;border-radius:14px;padding:24px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25)">',
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">',
+        '<div style="font-size:15px;font-weight:800;color:var(--blue-primary);display:flex;align-items:center;gap:8px">',
+          '<i class="bi bi-gear-fill"></i> Konfigurasi Backend URL',
+        '</div>',
+        '<button onclick="document.getElementById(\'cfg-overlay\').remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-secondary);line-height:1;padding:2px">&times;</button>',
+      '</div>',
+      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:600">URL Backend (Cloudflare Tunnel)</div>',
+      '<input id="cfg-input" type="url" value="' + escHtml(current) + '" ',
+        'style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;font-family:inherit;color:var(--text-dark);outline:none;margin-bottom:6px" ',
+        'placeholder="https://xxxx.trycloudflare.com">',
+      '<div style="font-size:11.5px;color:var(--text-secondary);margin-bottom:18px">',
+        isDefault ? 'Menggunakan URL default' : 'URL tersimpan dari localStorage',
+      '</div>',
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">',
+        '<button id="cfg-save" class="btn btn-primary" style="flex:1;justify-content:center;" onclick="saveBackendUrl()">Simpan &amp; Test Koneksi</button>',
+        '<button class="btn btn-outline" onclick="resetBackendUrl()">Reset ke Default</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  setTimeout(function() { var i = document.getElementById('cfg-input'); if (i) i.focus(); }, 50);
+}
+
+async function saveBackendUrl() {
+  var input = document.getElementById('cfg-input');
+  if (!input) return;
+  var url = input.value.trim().replace(/\/$/, '');
+  if (!url.startsWith('http')) {
+    toast('URL tidak valid, harus diawali https://', 'warning');
+    return;
+  }
+  var btn = document.getElementById('cfg-save');
+  if (btn) { btn.textContent = 'Menguji koneksi…'; btn.disabled = true; btn.style.opacity = '.7'; }
+  try {
+    var res = await fetch(url + '/status', { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    localStorage.setItem('OUR_API_BASE', url);
+    var overlay = document.getElementById('cfg-overlay');
+    if (overlay) overlay.remove();
+    toast('Backend terhubung', 'success');
+    setStatusPill(data.success === true || data.status !== undefined);
+    loadInitialData();
+  } catch (err) {
+    if (btn) { btn.textContent = 'Simpan & Test Koneksi'; btn.disabled = false; btn.style.opacity = '1'; }
+    toast('Backend tidak dapat dihubungi', 'warning');
+    setStatusPill(false);
+  }
+}
+
+function resetBackendUrl() {
+  localStorage.removeItem('OUR_API_BASE');
+  var overlay = document.getElementById('cfg-overlay');
+  if (overlay) overlay.remove();
+  toast('URL backend direset ke default', 'info');
+  checkBackendStatus();
+  loadInitialData();
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('photo-modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closePhotoModal();
+  });
+  initPhotoZoomHandlers();
+  document.getElementById('gen-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      // Jangan tutup modal saat proses generate sedang berjalan
+      if (jobId && (pollIv || animProgressIv)) return;
+      closeGenModal();
+    }
+  });
+  init();
+});
+
+async function init() {
+  await checkBackendStatus();
+  await loadTowers();
+
+  var session = loadSession();
+  if (session && session.unitBlocks && session.unitBlocks.length > 0) {
+    unitBlocks = session.unitBlocks;
+    t0 = session.t0 || Date.now();
+    jobId = session.jobId || null;
+
+    // Pastikan setiap unit block punya cache unit-list untuk tower-nya
+    for (var i = 0; i < unitBlocks.length; i++) {
+      await ensureUnitsLoaded(unitBlocks[i].tower);
+    }
+    renderAllUnits();
+
+    if (jobId) {
+      // Ada job yang sedang/baru selesai dipantau — recover
+      try {
+        var r = await fetch(api('/status/' + encodeURIComponent(jobId)), { signal: AbortSignal.timeout(5000) });
+        var d = await r.json();
+        if (d.status === 'waiting' || d.status === 'processing') {
+          openGenModal(true);
+          toast('Sesi dilanjutkan setelah refresh', 'info');
+        } else if (d.status === 'completed' || d.success === true) {
+          openGenModal(true);
+          finishAnimProgress(showGenDone);
+        } else {
+          jobId = null; downloadFileName = null;
+          saveSession();
+        }
+      } catch (_) {
+        jobId = null; downloadFileName = null;
+        saveSession();
+      }
+    }
+  } else {
+    addUnitBlock();
+  }
+}
+
+async function loadInitialData() {
+  await loadTowers();
+  for (var i = 0; i < unitBlocks.length; i++) {
+    await ensureUnitsLoaded(unitBlocks[i].tower);
+  }
+  renderAllUnits();
+}
+
+// ══════════════════════════════════════════════
+//  DATA TOWER & UNIT DARI BACKEND
+// ══════════════════════════════════════════════
+async function loadTowers() {
+  // Daftar tower bersifat tetap (hardcode), tidak diambil dari backend.
+  return TOWERS;
+}
+
+async function ensureUnitsLoaded(tower) {
+  // Daftar unit bersifat tetap (hardcode), tidak diambil dari backend.
+  if (!tower) return [];
+  if (TOWER_UNITS_CACHE[tower]) return TOWER_UNITS_CACHE[tower];
+  var units = TOWER_UNITS[tower] || [];
+  TOWER_UNITS_CACHE[tower] = units;
+  return units;
+}
+
+// ══════════════════════════════════════════════
+//  UNIT BLOCK / AREA / DEFECT CRUD
+// ══════════════════════════════════════════════
+async function addUnitBlock() {
+  var today = new Date().toISOString().split('T')[0];
+  var defaultTower = TOWERS[0] ? TOWERS[0].value : '';
+  var ub = { id: uid(), tower: defaultTower, lantai: '', unit: '', date: today, areas: [] };
+  unitBlocks.push(ub);
+  if (defaultTower) await ensureUnitsLoaded(defaultTower);
+  addArea(ub.id, true);
+  renderAllUnits();
+  saveSession();
+}
+
+function addArea(ubId, skipRender) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  ub.areas.push({ id: uid(), areaName: '', defects: [] });
+  if (!skipRender) { renderAllUnits(); saveSession(); }
+}
+
+function removeArea(ubId, areaId) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  ub.areas = ub.areas.filter(function(a) { return a.id !== areaId; });
+  renderAllUnits();
+  saveSession();
+}
+
+async function setTower(ubId, val) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  ub.tower = val;
+  ub.lantai = '';
+  ub.unit = '';
+  await ensureUnitsLoaded(val);
+  patchUnitSelect(ub);
+  saveSession();
+}
+
+function setLantai(ubId, val) {
+  var ub = findUb(ubId);
+  if (ub) { ub.lantai = val; }
+  saveSession();
+}
+
+function setUnit(ubId, val) {
+  var ub = findUb(ubId);
+  if (ub) ub.unit = val;
+  saveSession();
+  // Reload gambar denah untuk semua area pada unit-block ini,
+  // karena saat unit baru dipilih, gambar sebelumnya (jika ada) masih merujuk ke unit lama / kosong.
+  if (ub) {
+    for (var i = 0; i < ub.areas.length; i++) {
+      initFloorplanImage(ub.id, ub.areas[i]);
+    }
+  }
+}
+
+function setDate(ubId, val) {
+  var ub = findUb(ubId);
+  if (ub) { ub.date = val; }
+  var el = document.getElementById('date-text-' + ubId);
+  if (el) el.textContent = val ? formatTanggal(val) : 'Pilih tanggal...';
+  saveSession();
+}
+
+function setAreaName(ubId, areaId, val) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (area) area.areaName = val;
+  var cells = document.querySelectorAll('#tbody-' + areaId + ' .td-area-text');
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].innerHTML = val ? escHtml(val) : '<span style="color:var(--text-secondary);font-style:italic;">&#8212;</span>';
+  }
+  saveSession();
+}
+
+function findUb(ubId) {
+  for (var i = 0; i < unitBlocks.length; i++) {
+    if (unitBlocks[i].id === ubId) return unitBlocks[i];
+  }
+  return null;
+}
+
+function findArea(ub, areaId) {
+  for (var i = 0; i < ub.areas.length; i++) {
+    if (ub.areas[i].id === areaId) return ub.areas[i];
+  }
+  return null;
+}
+
+function findDefect(area, defectId) {
+  for (var i = 0; i < area.defects.length; i++) {
+    if (area.defects[i].id === defectId) return area.defects[i];
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function renderAllUnits() {
+  var container = document.getElementById('unit-blocks-container');
+  container.innerHTML = '';
+  for (var ui = 0; ui < unitBlocks.length; ui++) {
+    var ub = unitBlocks[ui];
+    var div = document.createElement('div');
+    div.className = 'unit-block';
+    div.id = 'ub-block-' + ub.id;
+
+    var towerOptions = '';
+    if (TOWERS.length === 0) {
+      towerOptions = '<option value="" class="skeleton-opt">Memuat tower...</option>';
+    } else {
+      for (var t = 0; t < TOWERS.length; t++) {
+        towerOptions += '<option value="' + escHtml(TOWERS[t].value) + '"' + (ub.tower === TOWERS[t].value ? ' selected' : '') + '>' + escHtml(TOWERS[t].label) + '</option>';
+      }
+    }
+
+    var floors = ub.tower ? (TOWER_FLOORS[ub.tower] || []) : [];
+    var floorOptions = '<option value="">-- Pilih Lantai --</option>';
+    for (var f = 0; f < floors.length; f++) {
+      floorOptions += '<option value="' + escHtml(floors[f]) + '"' + (ub.lantai === floors[f] ? ' selected' : '') + '>' + escHtml(floors[f]) + '</option>';
+    }
+
+    var units = TOWER_UNITS_CACHE[ub.tower] || [];
+    var unitOptions = '<option value="">-- Pilih Unit --</option>';
+    if (ub.tower && !TOWER_UNITS_CACHE[ub.tower]) {
+      unitOptions = '<option value="" class="skeleton-opt">Memuat unit...</option>';
+    } else {
+      for (var k = 0; k < units.length; k++) {
+        unitOptions += '<option value="' + escHtml(units[k]) + '"' + (ub.unit === units[k] ? ' selected' : '') + '>' + escHtml(units[k]) + '</option>';
+      }
+    }
+
+    var areasHtml = '';
+    for (var ai = 0; ai < ub.areas.length; ai++) {
+      areasHtml += renderAreaHTML(ub, ub.areas[ai]);
+    }
+
+    div.innerHTML =
+      '<div class="unit-block-body">' +
+        '<div class="form-row" style="margin-bottom:16px;">' +
+          '<div class="form-group"><label>Tower</label>' +
+            '<select id="tower-sel-' + ub.id + '" onchange="setTower(\'' + ub.id + '\', this.value)">' + towerOptions + '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Lantai</label>' +
+            '<select id="lantai-sel-' + ub.id + '" onchange="setLantai(\'' + ub.id + '\', this.value)">' + floorOptions + '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Unit</label>' +
+            '<select id="unit-sel-' + ub.id + '" onchange="setUnit(\'' + ub.id + '\', this.value)">' + unitOptions + '</select>' +
+          '</div>' +
+          '<div class="form-group"><label>Tanggal</label>' +
+            '<div class="date-display-wrap">' +
+              '<div class="date-display-text" onclick="document.getElementById(\'date-input-' + ub.id + '\').showPicker ? document.getElementById(\'date-input-' + ub.id + '\').showPicker() : document.getElementById(\'date-input-' + ub.id + '\').click()">' +
+                '<span id="date-text-' + ub.id + '">' + (ub.date ? formatTanggal(ub.date) : 'Pilih tanggal...') + '</span>' +
+                '<span style="display:flex;align-items:center;gap:6px;margin-left:auto;">' +
+                  '<i class="bi bi-calendar3" style="color:var(--text-secondary);font-size:14px;"></i>' +
+                '</span>' +
+              '</div>' +
+              '<input type="date" id="date-input-' + ub.id + '" value="' + ub.date + '" onchange="setDate(\'' + ub.id + '\', this.value)">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div id="areas-' + ub.id + '">' + areasHtml + '</div>' +
+        '<div style="margin-top:10px;">' +
+          '<button class="btn-add-area" onclick="addArea(\'' + ub.id + '\')">' +
+            '<i class="bi bi-plus"></i> Tambah Area' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    container.appendChild(div);
+  }
+
+  for (var ui2 = 0; ui2 < unitBlocks.length; ui2++) {
+    var ub2 = unitBlocks[ui2];
+    for (var ai2 = 0; ai2 < ub2.areas.length; ai2++) {
+      (function(ubId, areaId, areaObj) {
+        var fc = document.getElementById('fp-container-' + areaId);
+        if (fc) fc.onclick = function(e) { onFloorplanClick(e, ubId, areaId); };
+        initFloorplanImage(ubId, areaObj);
+      })(ub2.id, ub2.areas[ai2].id, ub2.areas[ai2]);
+    }
+  }
+
+  // Pasang drag-drop untuk semua label foto (desktop)
+  if (!isMobileDevice()) {
+    for (var ui3 = 0; ui3 < unitBlocks.length; ui3++) {
+      var ub3 = unitBlocks[ui3];
+      for (var ai3 = 0; ai3 < ub3.areas.length; ai3++) {
+        var area3 = ub3.areas[ai3];
+        for (var di3 = 0; di3 < area3.defects.length; di3++) {
+          var d3 = area3.defects[di3];
+          if (!d3.foto) {
+            (function(ubId3, areaId3, defectId3) {
+              var lbl = document.getElementById('fotolabel-' + defectId3) || document.getElementById('fotolabel-dc-' + defectId3);
+              attachFotoDragDrop(lbl, ubId3, areaId3, defectId3);
+            })(ub3.id, area3.id, d3.id);
+          }
+        }
+      }
+    }
+  }
+}
+
+function renderAreaHTML(ub, area) {
+  var hasDefects = area.defects.length > 0;
+  var rows = '';
+  var cards = '';
+  for (var i = 0; i < area.defects.length; i++) {
+    rows += renderDefectRow(ub.id, area, area.defects[i], i);
+    cards += renderDefectCard(ub.id, area, area.defects[i], i);
+  }
+  var removeBtnHtml = ub.areas.length > 1
+    ? '<button onclick="removeArea(\'' + ub.id + '\',\'' + area.id + '\')" style="background:none;border:none;color:var(--danger);font-size:15px;cursor:pointer;" title="Hapus area"><i class="bi bi-x-circle"></i></button>'
+    : '';
+  var emptyHtml = !hasDefects
+    ? '<div class="empty-state"><i class="bi bi-clipboard-x"></i><h3>Belum ada defect</h3><p>Klik tombol di bawah untuk menambah</p></div>'
+    : '';
+  return '<div class="area-block" id="area-block-' + area.id + '">' +
+    '<div class="area-block-header">' +
+      '<input class="area-name-input" id="area-name-' + area.id + '" type="text" value="' + escHtml(area.areaName) + '" placeholder="Ketik nama area..." enterkeyhint="done" oninput="setAreaName(\'' + ub.id + '\',\'' + area.id + '\',this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' +
+      removeBtnHtml +
+    '</div>' +
+    '<div class="area-block-body">' +
+      '<div class="floorplan-wrap" style="padding:12px 12px 6px;">' + renderFloorplanHTML(ub.id, area) + '</div>' +
+      '<div class="table-wrap">' +
+        '<table><thead><tr>' +
+          '<th style="width:40px;">No</th>' +
+          '<th>Deskripsi Pekerjaan</th>' +
+          '<th style="width:80px;">Area</th>' +
+          '<th style="width:90px;">Foto</th>' +
+          '<th style="width:120px;">Marker</th>' +
+          '<th style="width:48px;"></th>' +
+        '</tr></thead>' +
+        '<tbody id="tbody-' + area.id + '">' + rows + '</tbody>' +
+        '</table>' +
+      '</div>' +
+      '<div class="defect-card" id="dcards-' + area.id + '">' + cards + '</div>' +
+      emptyHtml +
+      '<div class="defect-action-row">' +
+        '<button class="btn-add-defect" onclick="addDefect(\'' + ub.id + '\',\'' + area.id + '\')">' +
+          '<i class="bi bi-plus-circle-fill"></i> Tambah Defect' +
+        '</button>' +
+        '<label class="btn-batch-import" title="Upload banyak foto sekaligus — tiap foto otomatis membuat satu defect baru" onclick="batchImportFoto(\'' + ub.id + '\',\'' + area.id + '\')">' +
+          '<i class="bi bi-images"></i> insert multi foto' +
+        '</label>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderDefectRow(ubId, area, d, i) {
+  var color = MARKER_COLORS[i % MARKER_COLORS.length];
+  var circle = MARKER_CIRCLES[i] || (i + 1);
+  var areaLabel = area.areaName
+    ? escHtml(area.areaName)
+    : '<span style="color:var(--text-secondary);font-style:italic;">&#8212;</span>';
+
+  var fotoCell;
+  if (d.foto) {
+    fotoCell = '<div class="foto-cell-filled">' +
+      '<div class="foto-thumb-wrap">' +
+        '<img class="foto-thumb" src="' + d.foto + '" onclick="openPhotoModal(\'' + d.id + '\')" title="Klik untuk zoom">' +
+        '<label class="foto-btn-change" title="Ganti foto" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')"><i class="bi bi-arrow-repeat"></i></label>' +
+        '<button class="foto-btn-x" onclick="removeFoto(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')" title="Hapus foto"><i class="bi bi-x"></i></button>' +
+      '</div></div>';
+  } else if (d.fotoUploading) {
+    fotoCell = '<div class="foto-cell-empty"><span class="foto-add-label"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i> Mengunggah...</span></div>';
+  } else {
+    fotoCell = '<div class="foto-cell-empty">' +
+      '<label class="foto-add-label" id="fotolabel-' + d.id + '" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')" title="Klik atau seret foto ke sini"><i class="bi bi-image"></i> Pilih Foto</label>' +
+      '</div>';
+  }
+
+  var markerBtn;
+  if (d.marker) {
+    markerBtn = '<button class="btn-marker has-marker" onclick="startPick(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')">' +
+      '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:4px;background:' + color + ';color:#fff;font-size:10px;font-weight:800;">' + circle + '</span> Ubah' +
+      '</button>';
+  } else {
+    markerBtn = '<button class="btn-marker" onclick="startPick(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')">' +
+      '<i class="bi bi-geo-alt"></i> Pilih Titik' +
+      '</button>';
+  }
+
+  return '<tr data-defect-id="' + d.id + '">' +
+    '<td class="td-no">' + (i + 1) + '</td>' +
+    '<td class="td-desc"><input type="text" id="desc-' + d.id + '" value="' + escHtml(d.desc) + '" placeholder="Masukkan deskripsi defect" enterkeyhint="done" oninput="updateDesc(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\',this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}"></td>' +
+    '<td class="td-area"><div class="td-area-text">' + areaLabel + '</div></td>' +
+    '<td>' + fotoCell + '</td>' +
+    '<td>' + markerBtn + '</td>' +
+    '<td><button class="btn-danger-sm" onclick="deleteDefect(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')"><i class="bi bi-trash-fill"></i></button></td>' +
+  '</tr>';
+}
+
+function renderDefectCard(ubId, area, d, i) {
+  var color = MARKER_COLORS[i % MARKER_COLORS.length];
+  var circle = MARKER_CIRCLES[i] || (i + 1);
+  var areaLabel = area.areaName || '<span style="color:var(--text-secondary);font-style:italic;">—</span>';
+
+  var fotoCell;
+  if (d.foto) {
+    fotoCell = '<div class="foto-cell-filled">' +
+      '<div class="foto-thumb-wrap">' +
+        '<img class="foto-thumb" src="' + d.foto + '" onclick="openPhotoModal(\'' + d.id + '\')" title="Klik untuk zoom">' +
+        '<label class="foto-btn-change" title="Ganti foto" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')"><i class="bi bi-arrow-repeat"></i></label>' +
+        '<button class="foto-btn-x" onclick="removeFoto(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')" title="Hapus foto"><i class="bi bi-x"></i></button>' +
+      '</div></div>';
+  } else if (d.fotoUploading) {
+    fotoCell = '<span class="foto-add-label"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i> Mengunggah...</span>';
+  } else {
+    fotoCell = '<label class="foto-add-label" id="fotolabel-dc-' + d.id + '" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')" title="Klik atau seret foto ke sini"><i class="bi bi-image"></i> Pilih Foto</label>';
+  }
+
+  var markerBtn;
+  if (d.marker) {
+    markerBtn = '<button class="btn-marker has-marker" onclick="startPick(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')">' +
+      '<span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:4px;background:' + color + ';color:#fff;font-size:10px;font-weight:800;">' + circle + '</span> Ubah Marker' +
+      '</button>';
+  } else {
+    markerBtn = '<button class="btn-marker" onclick="startPick(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')">' +
+      '<i class="bi bi-geo-alt"></i> Pilih Titik' +
+      '</button>';
+  }
+
+  return '<div class="dc-item" data-defect-id="' + d.id + '">' +
+    '<div class="dc-header">' +
+      '<span class="dc-num">Defect #' + (i + 1) + '</span>' +
+      '<button class="btn-danger-sm" onclick="deleteDefect(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\')"><i class="bi bi-trash-fill"></i></button>' +
+    '</div>' +
+    '<div class="dc-body">' +
+      '<div class="dc-row">' +
+        '<span class="dc-label">Deskripsi Pekerjaan</span>' +
+        '<input class="dc-input" type="text" id="dcdesc-' + d.id + '" value="' + escHtml(d.desc) + '" placeholder="Masukkan deskripsi defect" enterkeyhint="done" oninput="updateDesc(\'' + ubId + '\',\'' + area.id + '\',\'' + d.id + '\',this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}">' +
+      '</div>' +
+      '<div class="dc-row">' +
+        '<span class="dc-label">Area</span>' +
+        '<span style="font-size:13px;font-weight:500;color:var(--text-dark);">' + areaLabel + '</span>' +
+      '</div>' +
+      '<div class="dc-actions">' +
+        fotoCell +
+        markerBtn +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+// ══════════════════════════════════════════════
+//  FLOORPLAN (HARDCODED - GITHUB RAW, OFFLINE-SAFE)
+// ══════════════════════════════════════════════
+var FLOORPLAN_BASE_URL = 'https://raw.githubusercontent.com/muhamadqosas/pdf-processing-system/main/';
+
+function getFloorplanUrl(ub) {
+  if (!ub || !ub.unit) {
+    console.warn('[Floorplan] Data unit tidak valid:', ub);
+    return '';
+  }
+
+  var match = String(ub.unit).match(/(\d+)/);
+  if (!match) {
+    console.warn('[Floorplan] Tidak ditemukan nomor unit pada:', ub.unit);
+    return '';
+  }
+
+  var num = match[1];
+
+  // Pastikan selalu format 2 digit (1 -> 01, 9 -> 09, 10 -> 10, 18 -> 18, 29 -> 29)
+  if (num.length < 2) num = '0' + num;
+
+  // Bersihkan dari spasi / karakter tak terduga (defensif)
+  num = num.trim().replace(/\s+/g, '');
+
+  var url = FLOORPLAN_BASE_URL + num + '.jpg';
+
+  console.log('[Floorplan] Unit "' + ub.unit + '" -> URL denah: ' + url);
+
+  return url;
+}
+
+// Fallback ke PNG / subfolder jika .jpg di root gagal dimuat
+function getFloorplanFallbackUrls(ub) {
+  if (!ub || !ub.unit) return [];
+
+  var match = String(ub.unit).match(/(\d+)/);
+  if (!match) return [];
+
+  var num = match[1];
+  if (num.length < 2) num = '0' + num;
+  num = num.trim().replace(/\s+/g, '');
+
+  return [
+    FLOORPLAN_BASE_URL + num + '.png',
+    FLOORPLAN_BASE_URL + 'floorplan/' + num + '.jpg',
+    FLOORPLAN_BASE_URL + 'floorplan/' + num + '.png',
+    FLOORPLAN_BASE_URL + 'denah/' + num + '.jpg',
+    FLOORPLAN_BASE_URL + 'denah/' + num + '.png'
+  ];
+}
+
+// Pasang handler load/error + fallback otomatis pada <img> denah
+function attachFloorplanHandlers(img, ub, fallbackEl) {
+  if (!img || !ub) return;
+
+  var triedUrls = [getFloorplanUrl(ub)].concat(getFloorplanFallbackUrls(ub));
+  var idx = 0;
+
+  function tryNext() {
+    if (idx >= triedUrls.length) {
+      console.error('[Floorplan] Semua URL gagal untuk unit "' + ub.unit + '". Menampilkan placeholder.');
+      img.style.display = 'none';
+      if (fallbackEl) fallbackEl.style.display = 'flex';
+      return;
+    }
+    var url = triedUrls[idx];
+    idx++;
+    console.log('[Floorplan] Mencoba memuat: ' + url);
+    img.src = url;
+  }
+
+  img.onload = function() {
+    console.log('[Floorplan] BERHASIL dimuat: ' + img.src);
+    img.style.display = 'block';
+    if (fallbackEl) fallbackEl.style.display = 'none';
+    // Reposisi marker di popup setelah gambar termuat (naturalWidth/Height tersedia)
+    if (typeof repositionFpMarkers === 'function') repositionFpMarkers();
+  };
+
+  img.onerror = function() {
+    console.warn('[Floorplan] GAGAL dimuat (mungkin 404/CORS): ' + img.src);
+    tryNext();
+  };
+
+  tryNext();
+}
+
+function renderFloorplanHTML(ubId, area) {
+  var ub = findUb(ubId);
+  var markersHtml = '';
+  for (var i = 0; i < area.defects.length; i++) {
+    var d = area.defects[i];
+    if (!d.marker) continue;
+    var color = MARKER_COLORS[i % MARKER_COLORS.length];
+    var circle = MARKER_CIRCLES[i] || (i + 1);
+    markersHtml += '<div class="defect-marker" style="left:' + d.marker.x + '%;top:' + d.marker.y + '%;background:' + color + ';" title="' + escHtml(d.desc || 'Defect #' + (i+1)) + '">' + circle + '</div>';
+  }
+  var fallbackHtml = '<div class="floorplan-fallback" id="fp-fallback-' + area.id + '" style="display:none;width:100%;aspect-ratio:700/420;align-items:center;justify-content:center;background:#F0F6FF;color:var(--text-secondary);font-size:13px;font-weight:600;text-align:center;padding:16px;"><span><i class="bi bi-image" style="font-size:22px;display:block;margin-bottom:6px;"></i>Denah unit tidak tersedia</span></div>';
+  // src diisi via JS (attachFloorplanHandlers) agar bisa fallback otomatis & logging konsisten
+  var imgHtml = '<img class="floorplan-image" id="fp-img-' + area.id + '" alt="Denah Unit" crossorigin="anonymous" style="display:none;">' + fallbackHtml;
+  return '<div class="floorplan-container" id="fp-container-' + area.id + '">' +
+    imgHtml +
+    '<div class="markers-layer" id="ml-' + area.id + '">' + markersHtml + '</div>' +
+  '</div>';
+}
+
+// Dipanggil setelah HTML floorplan disisipkan ke DOM, untuk memuat gambar denah
+function initFloorplanImage(ubId, area) {
+  var ub = findUb(ubId);
+  var img = document.getElementById('fp-img-' + area.id);
+  var fallbackEl = document.getElementById('fp-fallback-' + area.id);
+  if (!img) return;
+  if (!ub || !ub.unit) {
+    img.style.display = 'none';
+    if (fallbackEl) fallbackEl.style.display = 'flex';
+    return;
+  }
+  attachFloorplanHandlers(img, ub, fallbackEl);
+}
+
+// ══════════════════════════════════════════════
+//  DEFECT CRUD
+// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  PATCH HELPERS — update DOM surgical tanpa full re-render
+// ══════════════════════════════════════════════
+
+// Re-render hanya bagian tbody + dcards + empty-state satu area
+function patchAreaDefects(ub, area) {
+  var tbody = document.getElementById('tbody-' + area.id);
+  var dcards = document.getElementById('dcards-' + area.id);
+  var areaBlock = document.getElementById('area-block-' + area.id);
+  if (!tbody || !dcards || !areaBlock) { renderAllUnits(); return; }
+
+  var rows = '';
+  var cards = '';
+  for (var i = 0; i < area.defects.length; i++) {
+    rows += renderDefectRow(ub.id, area, area.defects[i], i);
+    cards += renderDefectCard(ub.id, area, area.defects[i], i);
+  }
+  tbody.innerHTML = rows;
+  dcards.innerHTML = cards;
+
+  // Update empty-state: elemen setelah dcards sebelum btn-add-defect
+  var existingEmpty = areaBlock.querySelector('.empty-state');
+  if (area.defects.length === 0) {
+    if (!existingEmpty) {
+      var emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-state';
+      emptyDiv.innerHTML = '<i class="bi bi-clipboard-x"></i><h3>Belum ada defect</h3><p>Klik tombol di bawah untuk menambah</p>';
+      var addBtn = areaBlock.querySelector('.btn-add-defect');
+      if (addBtn) areaBlock.querySelector('.area-block-body').insertBefore(emptyDiv, addBtn);
+    }
+  } else {
+    if (existingEmpty) existingEmpty.parentNode.removeChild(existingEmpty);
+  }
+
+  // Update marker overlay di floorplan
+  var markersLayer = document.getElementById('ml-' + area.id);
+  if (markersLayer) markersLayer.innerHTML = buildMarkersHTML(ub.id, area);
+
+  // Pasang drag-drop ke semua label foto di area ini (desktop)
+  if (!isMobileDevice()) {
+    for (var di = 0; di < area.defects.length; di++) {
+      var dfc = area.defects[di];
+      if (!dfc.foto) {
+        (function(ubId2, areaId2, defectId2) {
+          var lbl = document.getElementById('fotolabel-' + defectId2) || document.getElementById('fotolabel-dc-' + defectId2);
+          attachFotoDragDrop(lbl, ubId2, areaId2, defectId2);
+        })(ub.id, area.id, dfc.id);
+      }
+    }
+  }
+}
+
+// Re-render hanya options dropdown Unit satu UB
+function patchUnitSelect(ub) {
+  // Patch lantai dropdown
+  var lantaiSel = document.getElementById('lantai-sel-' + ub.id);
+  if (lantaiSel) {
+    var floors = ub.tower ? (TOWER_FLOORS[ub.tower] || []) : [];
+    var lhtml = '<option value="">-- Pilih Lantai --</option>';
+    for (var f = 0; f < floors.length; f++) {
+      lhtml += '<option value="' + escHtml(floors[f]) + '"' + (ub.lantai === floors[f] ? ' selected' : '') + '>' + escHtml(floors[f]) + '</option>';
+    }
+    lantaiSel.innerHTML = lhtml;
+  }
+  // Patch unit dropdown
+  var sel = document.getElementById('unit-sel-' + ub.id);
+  if (!sel) return;
+  var units = TOWER_UNITS_CACHE[ub.tower] || [];
+  var html = '<option value="">-- Pilih Unit --</option>';
+  for (var k = 0; k < units.length; k++) {
+    html += '<option value="' + escHtml(units[k]) + '"' + (ub.unit === units[k] ? ' selected' : '') + '>' + escHtml(units[k]) + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+// Bangun HTML marker overlay (dipakai di patchAreaDefects & konfirmasi marker)
+function buildMarkersHTML(ubId, area) {
+  var html = '';
+  for (var i = 0; i < area.defects.length; i++) {
+    var d = area.defects[i];
+    if (!d.marker) continue;
+    var color = MARKER_COLORS[i % MARKER_COLORS.length];
+    var circle = MARKER_CIRCLES[i] || (i + 1);
+    html += '<div class="defect-marker" style="left:' + d.marker.x + '%;top:' + d.marker.y + '%;background:' + color + ';" title="' + escHtml(d.desc || 'Defect #' + (i+1)) + '">' + circle + '</div>';
+  }
+  return html;
+}
+
+function addDefect(ubId, areaId) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+  area.defects.push({ id: uid(), desc: '', foto: null, fotoFileId: null, fotoUploading: false, fotoOffline: false, marker: null });
+  patchAreaDefects(ub, area);
+  saveSession();
+  toast('Defect berhasil ditambahkan', 'success');
+}
+
+// ══════════════════════════════════════════════
+//  insert multi foto
+// ══════════════════════════════════════════════
+var _batchPickerContext = null; // { ubId, areaId }
+
+function batchImportFoto(ubId, areaId) {
+  _batchPickerContext = { ubId: ubId, areaId: areaId };
+  if (isMobileDevice()) {
+    // Mobile: tampilkan sheet pilih sumber
+    document.getElementById('batch-source-overlay').classList.add('active');
+  } else {
+    // Desktop: langsung buka file manager multiple
+    batchSourcePick('gallery');
+  }
+}
+
+function closeBatchSourcePicker() {
+  document.getElementById('batch-source-overlay').classList.remove('active');
+}
+
+// Proses array File[] → buat defect baru per foto dan upload
+async function _processBatchFiles(ubId, areaId, files) {
+  if (!files || !files.length) return;
+
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+
+  toast('Membuat ' + files.length + ' defect dari ' + files.length + ' foto...', 'info');
+
+  var newDefects = [];
+  for (var i = 0; i < files.length; i++) {
+    var d = { id: uid(), desc: '', foto: null, fotoFileId: null, fotoUploading: true, fotoOffline: false, marker: null };
+    area.defects.push(d);
+    newDefects.push({ defect: d, file: files[i] });
+  }
+
+  patchAreaDefects(ub, area);
+  saveSession();
+
+  for (var j = 0; j < newDefects.length; j++) {
+    (function(item) {
+      changeFotoFile(ubId, areaId, item.defect.id, item.file);
+    })(newDefects[j]);
+  }
+}
+
+// Kamera batch loop dengan popup konfirmasi setelah tiap foto:
+// Ambil foto → proses defect → muncul popup "Foto Berikutnya" (besar) / "Selesai" (kecil)
+// User tap "Foto Berikutnya" → buka kamera lagi
+// User tap "Selesai" → loop berhenti
+var _cameraLoopCount = 0; // counter foto yang sudah diambil di sesi ini
+
+function _showCameraLoopPopup(ubId, areaId) {
+  // Hapus popup lama jika ada
+  var old = document.getElementById('__camera_loop_popup');
+  if (old) old.parentNode.removeChild(old);
+
+  var count = _cameraLoopCount;
+  var overlay = document.createElement('div');
+  overlay.id = '__camera_loop_popup';
+  overlay.style.cssText = [
+    'position:fixed;inset:0;z-index:9900;',
+    'background:rgba(0,0,0,0.55);',
+    'display:flex;align-items:flex-end;justify-content:center;',
+    'padding:0 0 0 0;',
+    'animation:fadeIn 0.2s ease;',
+    'font-family:inherit;'
+  ].join('');
+
+  overlay.innerHTML = [
+    '<div style="',
+      'background:#fff;border-radius:20px 20px 0 0;',
+      'padding:24px 20px 40px;width:100%;max-width:480px;',
+      'animation:sheetIn 0.25s ease;',
+      'text-align:center;',
+    '">',
+      // Icon & counter
+      '<div style="width:56px;height:56px;border-radius:50%;background:#EAF4FF;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">',
+        '<i class="bi bi-camera-fill" style="font-size:26px;color:#0F4C81;"></i>',
+      '</div>',
+      '<div style="font-size:13px;color:#6B7280;font-weight:600;margin-bottom:4px;">',
+        count + ' foto berhasil ditambahkan',
+      '</div>',
+      '<div style="font-size:16px;font-weight:800;color:#1F2937;margin-bottom:24px;">',
+        'Lanjut ambil foto berikutnya?',
+      '</div>',
+
+      // Tombol BESAR: Foto Berikutnya
+      '<button id="__clp_next" style="',
+        'display:flex;align-items:center;justify-content:center;gap:10px;',
+        'width:100%;padding:16px;border-radius:14px;border:none;',
+        'background:linear-gradient(90deg,#0F4C81,#1E6FB9);',
+        'color:#fff;font-size:16px;font-weight:800;cursor:pointer;',
+        'box-shadow:0 4px 18px rgba(15,76,129,0.32);',
+        'margin-bottom:12px;letter-spacing:0.2px;',
+      '">',
+        '<i class="bi bi-camera-fill" style="font-size:20px;"></i>',
+        'FOTO BERIKUTNYA',
+      '</button>',
+
+      // Tombol KECIL: Selesai
+      '<button id="__clp_stop" style="',
+        'width:100%;padding:11px;border-radius:10px;',
+        'border:1.5px solid #D6E4F2;background:#fff;',
+        'color:#6B7280;font-size:13px;font-weight:600;cursor:pointer;',
+      '">',
+        'Selesai (' + count + ' foto)',
+      '</button>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('__clp_next').onclick = function() {
+    overlay.remove();
+    _openCameraLoop(ubId, areaId);
+  };
+
+  document.getElementById('__clp_stop').onclick = function() {
+    overlay.remove();
+    var finalCount = _cameraLoopCount;
+    _cameraLoopCount = 0;
+    toast('Selesai — ' + finalCount + ' foto ditambahkan', 'success');
+  };
+}
+
+function _openCameraLoop(ubId, areaId) {
+  // Hapus input lama jika ada (cegah duplikat di DOM)
+  var old = document.getElementById('__camera_loop_input');
+  if (old) old.parentNode.removeChild(old);
+
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.capture = 'environment';
+  inp.id = '__camera_loop_input';
+  inp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
+  document.body.appendChild(inp);
+
+  // Timeout fallback: jika onchange tidak pernah terpanggil dalam 60 detik
+  // (browser tidak support cancel detection), anggap user cancel → popup tetap muncul
+  var _didChange = false;
+  var _fallbackTimer = setTimeout(function() {
+    if (!_didChange) {
+      var el = document.getElementById('__camera_loop_input');
+      if (el) el.parentNode.removeChild(el);
+      // Jika sudah ada foto → tampilkan popup; jika belum → diam saja
+      if (_cameraLoopCount > 0) _showCameraLoopPopup(ubId, areaId);
+    }
+  }, 60000);
+
+  inp.onchange = function() {
+    _didChange = true;
+    clearTimeout(_fallbackTimer);
+    var files = Array.prototype.slice.call(inp.files || []);
+    var el = document.getElementById('__camera_loop_input');
+    if (el) el.parentNode.removeChild(el);
+
+    if (!files.length) {
+      // User cancel tanpa foto (beberapa browser memang trigger onchange kosong)
+      if (_cameraLoopCount > 0) _showCameraLoopPopup(ubId, areaId);
+      return;
+    }
+
+    // Ada foto → proses jadi defect baru, lalu tampilkan popup konfirmasi
+    _cameraLoopCount += files.length;
+    _processBatchFiles(ubId, areaId, files);
+    // Beri jeda singkat agar UI update dulu sebelum popup muncul
+    setTimeout(function() { _showCameraLoopPopup(ubId, areaId); }, 400);
+  };
+
+  inp.click();
+}
+
+function batchSourcePick(source) {
+  closeBatchSourcePicker();
+  if (!_batchPickerContext) return;
+  var ctx = _batchPickerContext;
+  _batchPickerContext = null;
+
+  if (source === 'camera') {
+    // Kamera loop: buka satu per satu, konfirmasi lewat popup setelah tiap foto
+    _cameraLoopCount = 0;
+    _openCameraLoop(ctx.ubId, ctx.areaId);
+  } else {
+    // Galeri / file manager: multiple select langsung
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*';
+    inp.multiple = true;
+    inp.onchange = function() {
+      _processBatchFiles(ctx.ubId, ctx.areaId, Array.prototype.slice.call(inp.files || []));
+    };
+    inp.click();
+  }
+}
+
+// Helper: proses satu file foto langsung ke defect tertentu (dipakai oleh batchImportFoto)
+function changeFotoFile(ubId, areaId, defectId, file) {
+  // Buat fake input object seperti yang diharapkan changeFoto
+  var fakeInput = { files: [file] };
+  changeFoto(ubId, areaId, defectId, fakeInput);
+}
+
+function deleteDefect(ubId, areaId, defectId) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+  area.defects = area.defects.filter(function(d) { return d.id !== defectId; });
+  if (pickingInfo && pickingInfo.defectId === defectId) cancelPickModal();
+  patchAreaDefects(ub, area);
+  saveSession();
+  toast('Defect berhasil dihapus', 'warning');
+}
+
+function updateDesc(ubId, areaId, defectId, val) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+  var d = findDefect(area, defectId);
+  if (d) { d.desc = val; saveSession(); }
+}
+
+// ══════════════════════════════════════════════
+//  FLUSH AREA NAMES — pastikan nilai input area
+//  yang sedang diedit sudah tersimpan ke data model
+//  sebelum renderAllUnits() dipanggil (mencegah
+//  kolom Area tampil '-' saat render ulang)
+// ══════════════════════════════════════════════
+function flushAreaNames() {
+  var inputs = document.querySelectorAll('.area-name-input');
+  for (var i = 0; i < inputs.length; i++) {
+    var inp = inputs[i];
+    // id format: area-name-<areaId>
+    var areaId = inp.id.replace('area-name-', '');
+    var val = inp.value;
+    // Cari ub & area dari areaId
+    for (var ui = 0; ui < unitBlocks.length; ui++) {
+      var ub = unitBlocks[ui];
+      for (var ai = 0; ai < ub.areas.length; ai++) {
+        if (ub.areas[ai].id === areaId) {
+          if (ub.areas[ai].areaName !== val) {
+            ub.areas[ai].areaName = val;
+          }
+          break;
+        }
+      }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+//  FOTO - upload ke backend (dengan fallback offline base64)
+// ══════════════════════════════════════════════
+
+// Simpan file asli secara sementara (tidak di-serialize ke session)
+var _pendingFotoFiles = {}; // defectId -> File
+
+function readFileAsDataURL(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.onerror = function() { reject(new Error('Gagal membaca file')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Kompresi gambar sebelum disimpan/dikirim ──
+// maxW/maxH  : ukuran sisi terpanjang maksimum (px)
+// quality    : kualitas JPEG (0.0 – 1.0)
+// Mengembalikan: { dataUrl, blob, width, height }
+function compressImage(file, maxW, maxH, quality) {
+  maxW = maxW || 1280;
+  maxH = maxH || 1280;
+  quality = (quality !== undefined) ? quality : 0.75;
+
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onerror = function() { reject(new Error('Gagal membaca file')); };
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = function() { reject(new Error('Gagal memuat gambar')); };
+      img.onload = function() {
+        var origW = img.naturalWidth;
+        var origH = img.naturalHeight;
+
+        // Hitung ukuran baru dengan menjaga aspect ratio
+        var scale = Math.min(1, maxW / origW, maxH / origH);
+        var newW = Math.round(origW * scale);
+        var newH = Math.round(origH * scale);
+
+        var canvas = document.createElement('canvas');
+        canvas.width  = newW;
+        canvas.height = newH;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, newW, newH);
+
+        var dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+        // Konversi dataUrl → Blob agar bisa dikirim via FormData
+        var byteStr = atob(dataUrl.split(',')[1]);
+        var ab = new ArrayBuffer(byteStr.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+        var blob = new Blob([ab], { type: 'image/jpeg' });
+
+        resolve({ dataUrl: dataUrl, blob: blob, width: newW, height: newH });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Update hanya sel foto pada DOM tanpa full re-render (mencegah glitch & scroll ke atas)
+function patchFotoCell(ubId, areaId, d, areaForRender) {
+  var area = areaForRender;
+  // Temukan indeks defect di area untuk warna marker
+  var defectIdx = 0;
+  for (var i = 0; i < area.defects.length; i++) {
+    if (area.defects[i].id === d.id) { defectIdx = i; break; }
+  }
+
+  // Bangun HTML sel foto
+  var fotoHtml;
+  if (d.foto) {
+    fotoHtml = '<div class="foto-cell-filled">' +
+      '<div class="foto-thumb-wrap">' +
+        '<img class="foto-thumb" src="' + d.foto + '" onclick="openPhotoModal(\'' + d.id + '\')" title="Klik untuk zoom">' +
+        '<label class="foto-btn-change" title="Ganti foto" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + areaId + '\',\'' + d.id + '\')"><i class="bi bi-arrow-repeat"></i></label>' +
+        '<button class="foto-btn-x" onclick="removeFoto(\'' + ubId + '\',\'' + areaId + '\',\'' + d.id + '\')" title="Hapus foto"><i class="bi bi-x"></i></button>' +
+      '</div></div>';
+  } else if (d.fotoUploading) {
+    fotoHtml = '<div class="foto-cell-empty"><span class="foto-add-label"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i> Mengunggah...</span></div>';
+  } else {
+    fotoHtml = '<div class="foto-cell-empty">' +
+      '<label class="foto-add-label" id="fotolabel-' + d.id + '" onclick="openFotoSourcePicker(\'' + ubId + '\',\'' + areaId + '\',\'' + d.id + '\')" title="Klik atau seret foto ke sini"><i class="bi bi-image"></i> Pilih Foto</label>' +
+      '</div>';
+  }
+
+  // Update table row (desktop)
+  var tr = document.querySelector('#tbody-' + area.id + ' tr[data-defect-id="' + d.id + '"]');
+  if (tr) {
+    var fotoCells = tr.querySelectorAll('td');
+    // sel foto ada di index 3 (No, Desc, Area, Foto, Marker, Hapus)
+    if (fotoCells[3]) fotoCells[3].innerHTML = fotoHtml;
+  }
+
+  // Update card (mobile) — foto ada di dalam .dc-actions (bersama markerBtn)
+  var card = document.querySelector('#dcards-' + area.id + ' [data-defect-id="' + d.id + '"]');
+  if (card) {
+    var dcActions = card.querySelector('.dc-actions');
+    if (dcActions) {
+      // Ganti hanya elemen foto (label atau div foto), bukan markerBtn
+      // Hapus semua child yang bukan btn-marker
+      var toRemove = [];
+      for (var j = 0; j < dcActions.childNodes.length; j++) {
+        var child = dcActions.childNodes[j];
+        if (child.nodeType === 1 && !child.classList.contains('btn-marker')) {
+          toRemove.push(child);
+        }
+      }
+      for (var r = 0; r < toRemove.length; r++) dcActions.removeChild(toRemove[r]);
+      // Insert foto baru di depan
+      var tmp2 = document.createElement('div');
+      tmp2.innerHTML = fotoHtml;
+      while (tmp2.firstChild) dcActions.insertBefore(tmp2.firstChild, dcActions.firstChild);
+    }
+  }
+}
+
+async function changeFoto(ubId, areaId, defectId, input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+  var d = findDefect(area, defectId);
+  if (!d) return;
+
+  // ── Kompresi gambar sebelum disimpan & dikirim ──
+  // Maksimum 1280px sisi terpanjang, kualitas JPEG 75%
+  var compressed;
+  try {
+    compressed = await compressImage(file, 1280, 1280, 0.75);
+  } catch (e) {
+    toast('Gagal mengompresi gambar', 'warning');
+    return;
+  }
+  var dataUrl    = compressed.dataUrl;  // base64 hasil kompresi
+  var compBlob   = compressed.blob;     // Blob untuk FormData upload
+
+  // Tampilkan preview lokal segera — TANPA re-render seluruh halaman
+  // fotoOffline = false karena backend sudah mendukung Base64 Data URL langsung
+  d.fotoUploading = false;
+  d.foto = dataUrl;
+  d.fotoOffline = false;
+  d.fotoFileId = null;
+  // Simpan blob terkompresi sebagai "file pending" (dipakai saat generate-report offline)
+  _pendingFotoFiles[defectId] = compBlob;
+  patchFotoCell(ubId, areaId, d, area);
+  saveSession();
+
+  // Coba upload ke backend untuk mendapatkan URL permanen (opsional)
+  try {
+    var form = new FormData();
+    // Kirim blob terkompresi (bukan file asli) agar payload lebih ringan
+    form.append('file', compBlob, (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg');
+    form.append('defect_id', defectId);
+    var res = await fetch(api('/api/upload-photo'), { method: 'POST', body: form, signal: AbortSignal.timeout(30000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    if (data.success === false) throw new Error(data.message || 'Upload gagal');
+
+    d.fotoFileId = data.file_id || data.id || null;
+    d.foto = data.url || data.file_url || (d.fotoFileId ? api('/api/photo/' + d.fotoFileId) : dataUrl);
+    d.fotoOffline = false;
+    d.fotoUploading = false;
+    delete _pendingFotoFiles[defectId];
+    patchFotoCell(ubId, areaId, d, area);
+    saveSession();
+  } catch (err) {
+    // Upload ke server gagal — foto Base64 terkompresi tetap valid untuk /generate-report
+    d.fotoOffline = false;
+    d.fotoUploading = false;
+    saveSession();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  FOTO SOURCE PICKER (mobile = popup, desktop = langsung file)
+// ══════════════════════════════════════════════
+var _fotoPickerContext = null; // { ubId, areaId, defectId }
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+}
+
+function openFotoSourcePicker(ubId, areaId, defectId) {
+  _fotoPickerContext = { ubId: ubId, areaId: areaId, defectId: defectId };
+  if (isMobileDevice()) {
+    // Mobile: tampilkan popup pilih sumber
+    document.getElementById('foto-source-overlay').classList.add('active');
+  } else {
+    // Desktop: langsung buka file manager
+    fotoSourcePick('file');
+  }
+}
+
+function fotoSourcePick(source) {
+  closeFotoSourcePicker();
+  if (!_fotoPickerContext) return;
+  var ctx = _fotoPickerContext;
+  // Buat input file sementara
+  var inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  if (source === 'camera') inp.capture = 'environment';
+  inp.onchange = function() { changeFoto(ctx.ubId, ctx.areaId, ctx.defectId, inp); };
+  inp.click();
+}
+
+function closeFotoSourcePicker() {
+  document.getElementById('foto-source-overlay').classList.remove('active');
+}
+
+// Tutup picker saat klik backdrop
+document.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('foto-source-overlay');
+  if (overlay) overlay.addEventListener('click', function(e) { if (e.target === overlay) closeFotoSourcePicker(); });
+  var batchOverlay = document.getElementById('batch-source-overlay');
+  if (batchOverlay) batchOverlay.addEventListener('click', function(e) { if (e.target === batchOverlay) closeBatchSourcePicker(); });
+});
+
+// ── Drag & Drop ke label foto (desktop) ──
+function attachFotoDragDrop(labelEl, ubId, areaId, defectId) {
+  if (!labelEl) return;
+  labelEl.addEventListener('dragover', function(e) { e.preventDefault(); labelEl.classList.add('drag-over'); });
+  labelEl.addEventListener('dragleave', function() { labelEl.classList.remove('drag-over'); });
+  labelEl.addEventListener('drop', function(e) {
+    e.preventDefault();
+    labelEl.classList.remove('drag-over');
+    var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      var fakeInput = { files: [file] };
+      changeFoto(ubId, areaId, defectId, fakeInput);
+    }
+  });
+}
+
+
+function removeFoto(ubId, areaId, defectId) {
+  var ub = findUb(ubId);
+  if (!ub) return;
+  var area = findArea(ub, areaId);
+  if (!area) return;
+  var d = findDefect(area, defectId);
+  if (d) {
+    d.foto = null;
+    d.fotoFileId = null;
+    d.fotoOffline = false;
+    patchFotoCell(ubId, areaId, d, area);
+    saveSession();
+    toast('Foto dihapus', 'warning');
+  }
+}
+
+function openPhotoModal(defectId) {
+  for (var i = 0; i < unitBlocks.length; i++) {
+    var ub = unitBlocks[i];
+    for (var j = 0; j < ub.areas.length; j++) {
+      var d = findDefect(ub.areas[j], defectId);
+      if (d && d.foto) {
+        document.getElementById('photo-modal-img').src = d.foto;
+        document.getElementById('photo-modal-overlay').classList.add('active');
+        resetPhotoZoom();
+        lockPageZoom();
+        return;
+      }
+    }
+  }
+}
+
+function closePhotoModal() {
+  document.getElementById('photo-modal-overlay').classList.remove('active');
+  resetPhotoZoom();
+  unlockPageZoom();
+}
+
+// ── Kunci zoom halaman saat modal foto aktif, & reset zoom saat ditutup ──
+var _origViewportContent = null;
+function lockPageZoom() {
+  var vp = document.querySelector('meta[name="viewport"]');
+  if (!vp) return;
+  if (_origViewportContent === null) _origViewportContent = vp.getAttribute('content');
+  // Paksa reset skala halaman ke 1 dulu (mengatasi zoom yg "nyangkut"),
+  // lalu kunci agar pinch di dalam modal tidak ikut men-zoom halaman.
+  vp.setAttribute('content', _origViewportContent + ', maximum-scale=1, user-scalable=no');
+  requestAnimationFrame(function() {
+    vp.setAttribute('content', _origViewportContent + ', maximum-scale=1, user-scalable=no');
+  });
+}
+function unlockPageZoom() {
+  var vp = document.querySelector('meta[name="viewport"]');
+  if (!vp || _origViewportContent === null) return;
+  // Reset dulu skala halaman ke 1 (agar saat ditutup tidak perlu zoom-out manual),
+  // baru kembalikan setting viewport semula agar user tetap bisa zoom halaman normal.
+  vp.setAttribute('content', _origViewportContent + ', maximum-scale=1, user-scalable=no');
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      vp.setAttribute('content', _origViewportContent);
+    });
+  });
+}
+
+// ── Photo modal pinch-zoom & pan (tidak mengubah skala halaman) ──
+var pzState = { scale: 1, x: 0, y: 0, startDist: 0, startScale: 1, dragging: false, lastX: 0, lastY: 0, lastTapTime: 0 };
+
+function resetPhotoZoom() {
+  pzState.scale = 1; pzState.x = 0; pzState.y = 0;
+  applyPhotoZoom();
+}
+
+function applyPhotoZoom() {
+  var img = document.getElementById('photo-modal-img');
+  if (!img) return;
+  img.style.transform = 'translate(' + pzState.x + 'px,' + pzState.y + 'px) scale(' + pzState.scale + ')';
+  img.style.transformOrigin = 'center center';
+  img.style.transition = pzState.dragging ? 'none' : 'transform 0.15s ease';
+}
+
+function pzDist(t0, t1) {
+  var dx = t1.clientX - t0.clientX, dy = t1.clientY - t0.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function initPhotoZoomHandlers() {
+  var wrap = document.getElementById('photo-zoom-wrap');
+  if (!wrap) return;
+
+  wrap.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      pzState.startDist = pzDist(e.touches[0], e.touches[1]);
+      pzState.startScale = pzState.scale;
+    } else if (e.touches.length === 1 && pzState.scale > 1) {
+      pzState.dragging = true;
+      pzState.lastX = e.touches[0].clientX;
+      pzState.lastY = e.touches[0].clientY;
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      var dist = pzDist(e.touches[0], e.touches[1]);
+      var newScale = pzState.startScale * (dist / pzState.startDist);
+      pzState.scale = Math.min(Math.max(newScale, 1), 5);
+      applyPhotoZoom();
+    } else if (e.touches.length === 1 && pzState.dragging) {
+      e.preventDefault();
+      var dx = e.touches[0].clientX - pzState.lastX;
+      var dy = e.touches[0].clientY - pzState.lastY;
+      pzState.x += dx;
+      pzState.y += dy;
+      pzState.lastX = e.touches[0].clientX;
+      pzState.lastY = e.touches[0].clientY;
+      applyPhotoZoom();
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', function(e) {
+    if (e.touches.length === 0) {
+      pzState.dragging = false;
+      if (pzState.scale <= 1) { pzState.scale = 1; pzState.x = 0; pzState.y = 0; applyPhotoZoom(); }
+
+      // Double-tap untuk reset / zoom 2x
+      var now = Date.now();
+      if (now - pzState.lastTapTime < 300) {
+        if (pzState.scale > 1) {
+          pzState.scale = 1; pzState.x = 0; pzState.y = 0;
+        } else {
+          pzState.scale = 2;
+        }
+        applyPhotoZoom();
+      }
+      pzState.lastTapTime = now;
+    }
+  });
+
+  // Desktop: scroll wheel zoom
+  wrap.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY < 0 ? 0.15 : -0.15;
+    pzState.scale = Math.min(Math.max(pzState.scale + delta, 1), 5);
+    if (pzState.scale <= 1) { pzState.scale = 1; pzState.x = 0; pzState.y = 0; }
+    applyPhotoZoom();
+  }, { passive: false });
+}
+
+// ══════════════════════════════════════════════
+//  MARKER PICK
+// ══════════════════════════════════════════════
+function startPick(ubId, areaId, defectId) {
+  pickingInfo = { ubId: ubId, areaId: areaId, defectId: defectId };
+
+  // Cache ukuran stage/gambar sebelumnya (jika ada) sudah tidak valid untuk sesi pick baru ini —
+  // tanpa invalidate, posisi marker bisa salah saat ganti defect/area/unit dengan denah berbeda.
+  invalidateFpCache();
+
+  var ub = findUb(ubId);
+  var area = findArea(ub, areaId);
+
+  var img = document.getElementById('fp-pick-img');
+  var container = document.getElementById('fp-pick-container');
+  img.style.display = 'none';
+  container.style.background = '';
+
+  // Objek dummy sebagai "fallbackEl" — saat semua URL gagal, ubah background container
+  var fallbackProxy = {
+    style: {
+      set display(v) {
+        container.style.background = (v === 'flex' || v === 'block') ? '#F0F6FF' : '';
+      }
+    }
+  };
+
+  attachFloorplanHandlers(img, ub, fallbackProxy);
+
+  var markersHtml = '';
+  for (var i = 0; i < area.defects.length; i++) {
+    var d = area.defects[i];
+    if (!d.marker) continue;
+    var color = MARKER_COLORS[i % MARKER_COLORS.length];
+    var circle = MARKER_CIRCLES[i] || (i + 1);
+    var isActive = (d.id === defectId) ? ' active-pick' : '';
+    // Posisi left/top akan dihitung ulang oleh repositionFpMarkers() berdasarkan zoom/pan state
+    markersHtml += '<div class="fp-defect-marker' + isActive + '" data-defect-id="' + d.id + '" data-mx="' + d.marker.x + '" data-my="' + d.marker.y + '" style="background:' + color + ';" title="' + escHtml(d.desc || 'Defect #' + (i+1)) + '">' + circle + '</div>';
+  }
+  document.getElementById('fp-pick-markers').innerHTML = markersHtml;
+
+  // Reposisi setelah gambar selesai dimuat (naturalWidth tersedia) dan layout siap
+  var pickImg = document.getElementById('fp-pick-img');
+  var _doRepos = function() { invalidateFpCache(); setTimeout(repositionFpMarkers, 30); };
+  pickImg.addEventListener('load', _doRepos, { once: true });
+  // Fallback kalau gambar sudah cached (load tidak akan fire)
+  if (pickImg.complete && pickImg.naturalWidth) setTimeout(repositionFpMarkers, 50);
+
+  resetFpZoom();
+  document.getElementById('fp-pick-modal').classList.add('active');
+  lockPageZoom();
+  ensureFpResizeObserver();
+  // FIX MARKER BERGESER: double rAF menunggu browser benar-benar selesai layout & paint
+  // setelah modal tampil (lapisan pengaman tambahan, independen dari timing load gambar).
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      invalidateFpCache();
+      repositionFpMarkers();
+    });
+  });
+
+  // Reposisi marker saat ukuran window berubah
+  if (!window._fpResizeListener) {
+    window._fpResizeListener = function() {
+      if (document.getElementById('fp-pick-modal').classList.contains('active')) {
+        invalidateFpCache();
+        repositionFpMarkers();
+      }
+    };
+    window.addEventListener('resize', window._fpResizeListener);
+  }
+}
+
+function cancelPickModal() {
+  var hadMarker = !!(pickingInfo && (function() {
+    var ub = findUb(pickingInfo.ubId);
+    var area = ub ? findArea(ub, pickingInfo.areaId) : null;
+    var d = area ? findDefect(area, pickingInfo.defectId) : null;
+    return d && d.marker;
+  })());
+  pickingInfo = null;
+  document.getElementById('fp-pick-modal').classList.remove('active');
+  unlockPageZoom();
+  if (hadMarker) toast('Marker berhasil disimpan', 'success');
+}
+
+function onFloorplanClick(e, ubId, areaId) {
+  // Tidak dipakai - picking dilakukan via modal
+}
+
+function getRenderedImageRect(img) {
+  // img pakai object-fit:contain — elemen DOM bisa lebih besar dari area gambar aktual
+  // (ada letterbox/pillarbox). Hitung area gambar nyata yang dirender di dalam elemen.
+  var domRect = img.getBoundingClientRect();
+  var domW = domRect.width;
+  var domH = domRect.height;
+  var natW = img.naturalWidth || domW;
+  var natH = img.naturalHeight || domH;
+  if (!natW || !natH) return domRect; // fallback ke rect penuh jika metadata belum tersedia
+
+  var scale = Math.min(domW / natW, domH / natH);
+  var rendW = natW * scale;
+  var rendH = natH * scale;
+  var offsetX = (domW - rendW) / 2;
+  var offsetY = (domH - rendH) / 2;
+
+  return {
+    left:   domRect.left + offsetX,
+    top:    domRect.top  + offsetY,
+    width:  rendW,
+    height: rendH
+  };
+}
+
+function placeMarkerAt(clientX, clientY) {
+  if (!pickingInfo) return;
+
+  // Balik transformasi zoom/pan → koordinat ruang stage
+  var c = getFpCache();
+  var localX = clientX - c.containerLeft;
+  var localY = clientY - c.containerTop;
+  var unscaledX = (localX - fpzState.x) / fpzState.scale;
+  var unscaledY = (localY - fpzState.y) / fpzState.scale;
+
+  // Area render gambar (object-fit:contain) dalam ruang stage pada scale=1
+  var imgScale  = Math.min(c.stageW / c.natW, c.stageH / c.natH);
+  var rendW     = c.natW * imgScale;
+  var rendH     = c.natH * imgScale;
+  var imgOffsetX = (c.stageW - rendW) / 2;
+  var imgOffsetY = (c.stageH - rendH) / 2;
+
+  var x = ((unscaledX - imgOffsetX) / rendW) * 100;
+  var y = ((unscaledY - imgOffsetY) / rendH) * 100;
+  if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+  var ub = findUb(pickingInfo.ubId);
+  if (!ub) return;
+  var area = findArea(ub, pickingInfo.areaId);
+  if (!area) return;
+  var d = findDefect(area, pickingInfo.defectId);
+  if (!d) return;
+
+  var mx = parseFloat(x.toFixed(2));
+  var my = parseFloat(y.toFixed(2));
+  d.marker = { x: mx, y: my };
+
+  // Update titik marker yang sedang aktif di dalam popup (tanpa menutup popup),
+  // supaya preview pop-up langsung sinkron dengan titik yang baru saja diklik.
+  upsertPickMarkerDom(area, d, mx, my);
+
+  // Sinkronkan juga preview di halaman utama secara live, popup TETAP terbuka
+  // agar pengguna bisa repick berkali-kali sebelum menutup secara manual.
+  patchAreaDefects(ub, area);
+  saveSession();
+}
+
+// Buat/perbarui elemen titik marker aktif di dalam popup pick, lalu reposisikan semua marker.
+function upsertPickMarkerDom(area, d, mx, my) {
+  var layer = document.getElementById('fp-pick-markers');
+  if (!layer) return;
+  var el = layer.querySelector('.fp-defect-marker[data-defect-id="' + d.id + '"]');
+  if (!el) {
+    var idx = area.defects.indexOf(d);
+    var color = MARKER_COLORS[idx % MARKER_COLORS.length];
+    var circle = MARKER_CIRCLES[idx] || (idx + 1);
+    el = document.createElement('div');
+    el.className = 'fp-defect-marker active-pick';
+    el.setAttribute('data-defect-id', d.id);
+    el.style.background = color;
+    el.title = d.desc || ('Defect #' + (idx + 1));
+    el.textContent = circle;
+    layer.appendChild(el);
+  }
+  el.setAttribute('data-mx', mx);
+  el.setAttribute('data-my', my);
+  repositionFpMarkers();
+}
+
+// ── Floorplan pick modal: pinch-zoom & pan pada denah (mirip photo modal) ──
+var fpzState = {
+  scale: 1, x: 0, y: 0,
+  startDist: 0, startScale: 1,
+  // anchor pinch (dalam viewport) untuk zoom smooth
+  pinchMidX: 0, pinchMidY: 0,
+  // pan state
+  xAtPinchStart: 0, yAtPinchStart: 0,
+  dragging: false, moved: false,
+  lastX: 0, lastY: 0, startX: 0, startY: 0
+};
+var fpzHandlersInit = false;
+
+function resetFpZoom() {
+  // Dengan transform-origin:0 0, saat scale=1 stage sudah memenuhi container —
+  // cukup reset translate ke 0,0 dan scale ke 1.
+  fpzState.scale = 1; fpzState.x = 0; fpzState.y = 0; fpzState.moved = false;
+  applyFpZoom();
+  initFpZoomHandlers();
+}
+
+// Cache ukuran container & gambar agar tidak getBoundingClientRect() tiap frame
+var _fpCache = { stageW: 0, stageH: 0, natW: 0, natH: 0, valid: false };
+
+function invalidateFpCache() { _fpCache.valid = false; }
+
+// FIX MARKER BERGESER: ResizeObserver mengunci ulang posisi marker setiap kali ukuran
+// #fp-pick-container benar-benar berubah (resize window, rotasi device, munculnya keyboard
+// virtual di HP, dsb) — jauh lebih akurat daripada hanya andalkan setTimeout/resize listener,
+// karena dipanggil persis saat layout selesai berubah, bukan tebak-tebak delay.
+var _fpResizeObserver = null;
+function ensureFpResizeObserver() {
+  if (_fpResizeObserver) return;
+  if (typeof ResizeObserver === 'undefined') return; // browser sangat lama, fallback ke listener resize biasa
+  var container = document.getElementById('fp-pick-container');
+  if (!container) return;
+  _fpResizeObserver = new ResizeObserver(function() {
+    invalidateFpCache();
+    repositionFpMarkers();
+  });
+  _fpResizeObserver.observe(container);
+}
+
+function getFpCache() {
+  if (_fpCache.valid) return _fpCache;
+  var container = document.getElementById('fp-pick-container');
+  var img = document.getElementById('fp-pick-img');
+  if (!container || !img) return _fpCache;
+  var rect = container.getBoundingClientRect();
+  _fpCache.stageW = rect.width;
+  _fpCache.stageH = rect.height;
+  _fpCache.natW   = img.naturalWidth  || rect.width;
+  _fpCache.natH   = img.naturalHeight || rect.height;
+  _fpCache.containerLeft = rect.left;
+  _fpCache.containerTop  = rect.top;
+  _fpCache.valid  = true;
+  return _fpCache;
+}
+
+// RAF handle — satu frame render per cycle, tidak tumpuk-tumpuk
+var _fpRafId = null;
+function scheduleFpRender() {
+  if (_fpRafId) return;
+  _fpRafId = requestAnimationFrame(function() {
+    _fpRafId = null;
+    _applyFpZoomNow();
+  });
+}
+
+function _applyFpZoomNow() {
+  var stage = document.getElementById('fp-pick-stage');
+  if (!stage) return;
+  stage.style.transformOrigin = '0 0';
+  stage.style.transform = 'translate(' + fpzState.x + 'px,' + fpzState.y + 'px) scale(' + fpzState.scale + ')';
+  // Tidak pakai CSS transition — kita handle di JS agar marker selalu sync
+  stage.style.transition = 'none';
+  _repositionMarkersNow();
+}
+
+function applyFpZoom() { scheduleFpRender(); }
+
+// Reposisi marker — pakai transform:translate() bukan left/top → zero reflow
+function _repositionMarkersNow() {
+  var markersEl = document.getElementById('fp-pick-markers');
+  if (!markersEl) return;
+  var markers = markersEl.querySelectorAll('.fp-defect-marker');
+  if (!markers.length) return;
+
+  var c = getFpCache();
+  if (!c.stageW || !c.stageH) return;
+
+  // Area gambar dalam stage (object-fit:contain) pada scale=1
+  var imgScale  = Math.min(c.stageW / c.natW, c.stageH / c.natH);
+  var rendW     = c.natW * imgScale;
+  var rendH     = c.natH * imgScale;
+  var imgOffX   = (c.stageW - rendW) / 2;
+  var imgOffY   = (c.stageH - rendH) / 2;
+
+  var sc = fpzState.scale;
+  var tx = fpzState.x;
+  var ty = fpzState.y;
+
+  for (var i = 0; i < markers.length; i++) {
+    var m = markers[i];
+    var mx = parseFloat(m.getAttribute('data-mx'));
+    var my = parseFloat(m.getAttribute('data-my'));
+    if (isNaN(mx) || isNaN(my)) continue;
+    // Posisi dalam ruang stage (origin 0,0 stage)
+    var pxS = imgOffX + (mx / 100) * rendW;
+    var pyS = imgOffY + (my / 100) * rendH;
+    // Terapkan transform stage → koordinat container
+    var pxC = tx + pxS * sc;
+    var pyC = ty + pyS * sc;
+    // Gunakan transform:translate agar tidak trigger layout reflow
+    m.style.left = '0';
+    m.style.top  = '0';
+    m.style.transform = 'translate(calc(' + pxC + 'px - 50%), calc(' + pyC + 'px - 50%))';
+  }
+}
+
+// Panggil langsung (tanpa RAF) saat butuh sinkron — misal setelah gambar load
+function repositionFpMarkers() { _repositionMarkersNow(); }
+
+function fpzDist(t0, t1) {
+  var dx = t1.clientX - t0.clientX, dy = t1.clientY - t0.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function initFpZoomHandlers() {
+  if (fpzHandlersInit) return;
+  fpzHandlersInit = true;
+  var container = document.getElementById('fp-pick-container');
+  if (!container) return;
+
+  container.addEventListener('touchstart', function(e) {
+    // FIX MARKER BERGESER: pastikan ukuran container/gambar selalu diukur ulang dari kondisi
+    // terkini setiap gesture baru dimulai (jaga-jaga bila ada perubahan layout di luar resize/RO).
+    invalidateFpCache();
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      fpzState.startDist  = fpzDist(e.touches[0], e.touches[1]);
+      fpzState.startScale = fpzState.scale;
+      // Simpan midpoint dua jari dalam viewport sebagai anchor
+      fpzState.pinchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      fpzState.pinchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      // Simpan posisi pan saat pinch dimulai
+      fpzState.xAtPinchStart = fpzState.x;
+      fpzState.yAtPinchStart = fpzState.y;
+      fpzState.moved = true;
+    } else if (e.touches.length === 1) {
+      fpzState.dragging = true;
+      fpzState.moved = false;
+      fpzState.lastX = e.touches[0].clientX;
+      fpzState.lastY = e.touches[0].clientY;
+      fpzState.startX = e.touches[0].clientX;
+      fpzState.startY = e.touches[0].clientY;
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      var dist = fpzDist(e.touches[0], e.touches[1]);
+      var newScale = Math.min(Math.max(fpzState.startScale * (dist / fpzState.startDist), 1), 5);
+
+      // Hitung posisi container dalam viewport (offset stage dalam dokumen)
+      var containerRect = container.getBoundingClientRect();
+
+      // Posisi anchor (midpoint pinch) relatif terhadap container
+      var anchorContainerX = fpzState.pinchMidX - containerRect.left;
+      var anchorContainerY = fpzState.pinchMidY - containerRect.top;
+
+      // Posisi titik yang sama dalam ruang stage (sebelum transform) pada saat pinch dimulai
+      // dengan scale lama: p_stage = (anchorContainer - x0) / scale0
+      var stagePointX = (anchorContainerX - fpzState.xAtPinchStart) / fpzState.startScale;
+      var stagePointY = (anchorContainerY - fpzState.yAtPinchStart) / fpzState.startScale;
+
+      // Supaya p_stage tetap di anchorContainer setelah scale baru:
+      // x_new = anchorContainer - stagePoint * newScale
+      fpzState.x = anchorContainerX - stagePointX * newScale;
+      fpzState.y = anchorContainerY - stagePointY * newScale;
+      fpzState.scale = newScale;
+      applyFpZoom();
+    } else if (e.touches.length === 1 && fpzState.dragging) {
+      var dx = e.touches[0].clientX - fpzState.lastX;
+      var dy = e.touches[0].clientY - fpzState.lastY;
+      var totalDx = e.touches[0].clientX - fpzState.startX;
+      var totalDy = e.touches[0].clientY - fpzState.startY;
+      if (Math.abs(totalDx) > 6 || Math.abs(totalDy) > 6) fpzState.moved = true;
+      if (fpzState.scale > 1) {
+        e.preventDefault();
+        fpzState.x += dx;
+        fpzState.y += dy;
+        fpzState.lastX = e.touches[0].clientX;
+        fpzState.lastY = e.touches[0].clientY;
+        applyFpZoom();
+      } else {
+        fpzState.lastX = e.touches[0].clientX;
+        fpzState.lastY = e.touches[0].clientY;
+      }
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', function(e) {
+    if (e.touches.length === 0) {
+      var wasDragging = fpzState.dragging;
+      var wasMoved = fpzState.moved;
+      fpzState.dragging = false;
+      if (fpzState.scale <= 1) { fpzState.scale = 1; fpzState.x = 0; fpzState.y = 0; applyFpZoom(); }
+      // Tap (tidak bergeser & tidak pinch) -> tempatkan marker
+      if (wasDragging && !wasMoved && e.changedTouches.length === 1) {
+        placeMarkerAt(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+      }
+    }
+  });
+
+  // Desktop: scroll wheel zoom dengan anchor di posisi kursor
+  container.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY < 0 ? 0.15 : -0.15;
+    var oldScale = fpzState.scale;
+    var newScale = Math.min(Math.max(oldScale + delta, 1), 5);
+
+    var containerRect = container.getBoundingClientRect();
+    var anchorX = e.clientX - containerRect.left;
+    var anchorY = e.clientY - containerRect.top;
+
+    // Pertahankan titik di bawah kursor tetap di tempat yang sama
+    fpzState.x = anchorX - (anchorX - fpzState.x) * (newScale / oldScale);
+    fpzState.y = anchorY - (anchorY - fpzState.y) * (newScale / oldScale);
+
+    if (newScale <= 1) { fpzState.scale = 1; fpzState.x = 0; fpzState.y = 0; }
+    else { fpzState.scale = newScale; }
+    applyFpZoom();
+  }, { passive: false });
+
+  // Desktop: klik untuk tempatkan marker (drag mouse untuk pan saat zoom)
+  var mouseDownPos = null, mouseMoved = false, mouseDragging = false;
+  container.addEventListener('mousedown', function(e) {
+    invalidateFpCache(); // FIX MARKER BERGESER: ukur ulang dari kondisi terkini setiap klik baru
+    mouseDownPos = { x: e.clientX, y: e.clientY };
+    mouseMoved = false;
+    mouseDragging = fpzState.scale > 1;
+  });
+  container.addEventListener('mousemove', function(e) {
+    if (!mouseDownPos) return;
+    var dx = e.clientX - mouseDownPos.x, dy = e.clientY - mouseDownPos.y;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) mouseMoved = true;
+    if (mouseDragging && mouseMoved) {
+      fpzState.x += e.movementX || 0;
+      fpzState.y += e.movementY || 0;
+      applyFpZoom();
+    }
+  });
+  container.addEventListener('mouseup', function(e) {
+    if (mouseDownPos && !mouseMoved) {
+      placeMarkerAt(e.clientX, e.clientY);
+    }
+    mouseDownPos = null;
+    mouseDragging = false;
+  });
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type) {
+  type = type || 'success';
+  var icons = { success: 'check-circle-fill', warning: 'exclamation-triangle-fill', info: 'info-circle-fill' };
+  var c = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<i class="bi bi-' + (icons[type] || icons.success) + '"></i> ' + msg;
+  c.appendChild(t);
+  setTimeout(function() {
+    t.classList.add('fade-out');
+    setTimeout(function() { t.remove(); }, 300);
+  }, 3500);
+}
+
+// ══════════════════════════════════════════════
+//  VALIDATE — highlight SEMUA field error sekaligus
+// ══════════════════════════════════════════════
+
+// Hapus semua highlight error dari sesi validasi sebelumnya
+function clearAllValidationHighlights() {
+  var els = document.querySelectorAll('.field-error-persistent, .label-error-persistent, .marker-error-persistent, .area-error-persistent, .block-error-persistent');
+  for (var i = 0; i < els.length; i++) {
+    els[i].classList.remove('field-error-persistent', 'label-error-persistent', 'marker-error-persistent', 'area-error-persistent', 'block-error-persistent');
+  }
+  var banners = document.querySelectorAll('.validation-banner');
+  for (var b = 0; b < banners.length; b++) banners[b].parentNode.removeChild(banners[b]);
+}
+
+function validateAll() {
+  clearAllValidationHighlights();
+
+  if (unitBlocks.length === 0) {
+    toast('Belum ada data unit', 'warning');
+    return false;
+  }
+
+  var errors = []; // array of { msg, scrollTarget, ubIdx }
+  var firstScrollTarget = null;
+
+  for (var i = 0; i < unitBlocks.length; i++) {
+    var ub = unitBlocks[i];
+    var ubLabel = 'Blok ke-' + (i + 1);
+    var ubBlockEl = document.getElementById('ub-block-' + ub.id);
+
+    // Tower (hanya validasi jika belum dipilih — field selalu ada value default)
+    if (!ub.tower) {
+      var towerSel = document.getElementById('tower-sel-' + ub.id);
+      if (towerSel) towerSel.classList.add('field-error-persistent');
+      errors.push({ msg: ubLabel + ': Tower belum dipilih', scrollTarget: towerSel || ubBlockEl });
+      if (!firstScrollTarget) firstScrollTarget = towerSel || ubBlockEl;
+    }
+
+    if (!ub.lantai) {
+      var lantaiSel = document.getElementById('lantai-sel-' + ub.id);
+      if (lantaiSel) lantaiSel.classList.add('field-error-persistent');
+      errors.push({ msg: ubLabel + ': Lantai belum dipilih', scrollTarget: lantaiSel || ubBlockEl });
+      if (!firstScrollTarget) firstScrollTarget = lantaiSel || ubBlockEl;
+    }
+
+    if (!ub.unit) {
+      var unitSel = document.getElementById('unit-sel-' + ub.id);
+      if (unitSel) unitSel.classList.add('field-error-persistent');
+      errors.push({ msg: ubLabel + ': Unit belum dipilih', scrollTarget: unitSel || ubBlockEl });
+      if (!firstScrollTarget) firstScrollTarget = unitSel || ubBlockEl;
+    }
+
+    for (var j = 0; j < ub.areas.length; j++) {
+      var area = ub.areas[j];
+      var areaBlockEl = document.getElementById('area-block-' + area.id);
+      var areaLabel = area.areaName ? '"' + area.areaName + '"' : 'Area ke-' + (j + 1);
+
+      if (!area.areaName || area.areaName.trim() === '') {
+        var areaNameEl = document.getElementById('area-name-' + area.id);
+        if (areaNameEl) areaNameEl.classList.add('area-error-persistent');
+        if (areaBlockEl) areaBlockEl.classList.add('block-error-persistent');
+        errors.push({ msg: ubLabel + ': Nama area ke-' + (j + 1) + ' belum diisi', scrollTarget: areaNameEl || areaBlockEl });
+        if (!firstScrollTarget) firstScrollTarget = areaNameEl || areaBlockEl;
+      }
+
+      if (area.defects.length === 0) {
+        if (areaBlockEl) areaBlockEl.classList.add('block-error-persistent');
+        errors.push({ msg: ubLabel + ' ' + areaLabel + ': Belum ada defect', scrollTarget: areaBlockEl });
+        if (!firstScrollTarget) firstScrollTarget = areaBlockEl;
+      }
+
+      for (var k = 0; k < area.defects.length; k++) {
+        var d = area.defects[k];
+        var defectNo = '#' + (k + 1);
+
+        if (d.fotoUploading) {
+          errors.push({ msg: ubLabel + ' ' + areaLabel + ' Defect ' + defectNo + ': Tunggu foto selesai diunggah', scrollTarget: areaBlockEl });
+          if (!firstScrollTarget) firstScrollTarget = areaBlockEl;
         }
 
-        // 2. Notifikasi Jumlah File yang Diunggah
-        function updateFileCount(inputId, targetId) {
-            const input = document.getElementById(inputId);
-            const indicator = document.getElementById(targetId);
-            if(input.files.length > 0) {
-                indicator.innerText = `✓ ${input.files.length} file berhasil dipilih.`;
-                indicator.classList.remove('hidden');
-            } else {
-                indicator.classList.add('hidden');
-            }
+        if (!d.desc || d.desc.trim() === '') {
+          var descElDesk = document.getElementById('desc-' + d.id);
+          var descElMob = document.getElementById('dcdesc-' + d.id);
+          if (descElDesk) descElDesk.classList.add('field-error-persistent');
+          if (descElMob) descElMob.classList.add('field-error-persistent');
+          errors.push({ msg: ubLabel + ' ' + areaLabel + ' Defect ' + defectNo + ': Deskripsi pekerjaan belum diisi', scrollTarget: descElDesk || descElMob || areaBlockEl });
+          if (!firstScrollTarget) firstScrollTarget = descElDesk || descElMob || areaBlockEl;
         }
 
-        // 3. Fitur Utama: MERGE PDF
-        async function prosesMerge() {
-            const files = document.getElementById('mergeInput').files;
-            if (files.length < 2) return alert('Silakan pilih minimal 2 file PDF!');
-
-            try {
-                const mergedPdf = await PDFLib.PDFDocument.create();
-                for (const file of files) {
-                    const bytes = await file.arrayBuffer();
-                    const pdf = await PDFLib.PDFDocument.load(bytes);
-                    const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-                    pages.forEach(page => mergedPdf.addPage(page));
-                }
-                const mergedBytes = await mergedPdf.save();
-                downloadBlob(mergedBytes, 'merged_document.pdf', 'application/pdf');
-            } catch (err) {
-                alert('Gagal menggabungkan PDF. Pastikan file tidak rusak.');
-            }
+        if (!d.marker) {
+          // Highlight tombol marker (desktop & mobile)
+          var rowEl = document.querySelector('tr[data-defect-id="' + d.id + '"]');
+          if (rowEl) { var mb = rowEl.querySelector('.btn-marker'); if (mb) mb.classList.add('marker-error-persistent'); }
+          var cardEl = document.querySelector('.dc-item[data-defect-id="' + d.id + '"]');
+          if (cardEl) { var mb2 = cardEl.querySelector('.btn-marker'); if (mb2) mb2.classList.add('marker-error-persistent'); }
+          errors.push({ msg: ubLabel + ' ' + areaLabel + ' Defect ' + defectNo + ': Marker lokasi belum dipilih', scrollTarget: areaBlockEl });
+          if (!firstScrollTarget) firstScrollTarget = areaBlockEl;
         }
 
-        // 4. Fitur Utama: IMAGE TO PDF
-        async function prosesImgToPdf() {
-            const files = document.getElementById('imgInput').files;
-            if (files.length === 0) return alert('Pilih minimal 1 gambar!');
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const base64 = await fileToBase64(file);
-                
-                if (i > 0) doc.addPage();
-                
-                // Mengatur gambar pas dengan ukuran halaman PDF standar (A4 estimasi)
-                doc.addImage(base64, 'JPEG', 10, 10, 190, 277);
-            }
-            doc.save('images_converted.pdf');
+        if (!d.foto) {
+          // Highlight label "Pilih Foto"
+          var fotoLbl = document.getElementById('fotolabel-' + d.id) || document.getElementById('fotolabel-dc-' + d.id);
+          if (fotoLbl) fotoLbl.classList.add('label-error-persistent');
+          errors.push({ msg: ubLabel + ' ' + areaLabel + ' Defect ' + defectNo + ': Foto belum diunggah', scrollTarget: fotoLbl || areaBlockEl });
+          if (!firstScrollTarget) firstScrollTarget = fotoLbl || areaBlockEl;
         }
+      }
+    }
+  }
 
-        // Helper: Mengubah File ke Base64 (Untuk Gambar)
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
+  if (errors.length === 0) return true;
 
-        // Helper: Trigger Download File dari Memory Browser
-        function downloadBlob(bytes, filename, contentType) {
-            const blob = new Blob([bytes], { type: contentType });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
+  // Toast ringkasan
+  toast(errors.length + ' field belum lengkap — lihat indikator merah', 'warning');
+
+  // Scroll ke elemen bermasalah pertama
+  if (firstScrollTarget) {
+    firstScrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Tampilkan banner ringkasan error di bawah form (di atas tombol generate)
+  var generateCard = document.querySelector('.card:last-of-type .card-body');
+  if (generateCard) {
+    var listItems = errors.slice(0, 10).map(function(e) { return '<li>' + escHtml(e.msg) + '</li>'; }).join('');
+    var moreText = errors.length > 10 ? '<li>...dan ' + (errors.length - 10) + ' masalah lainnya</li>' : '';
+    var banner = document.createElement('div');
+    banner.className = 'validation-banner';
+    banner.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>' +
+      '<div><strong>' + errors.length + ' data belum lengkap:</strong><ul>' + listItems + moreText + '</ul></div>';
+    generateCard.insertBefore(banner, generateCard.firstChild);
+
+    // Auto-hapus banner setelah 8 detik
+    setTimeout(function() { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 8000);
+  }
+
+  // Hapus highlight setelah 5 detik
+  setTimeout(function() { clearAllValidationHighlights(); }, 5000);
+
+  return false;
+}
+
+// ══════════════════════════════════════════════
+//  GENERATE REPORT - POST /generate-report + animasi progress
+// ══════════════════════════════════════════════
+var animProgressIv = null;
+var animProgressSteps = [5, 12, 20, 35, 50, 65, 80, 90, 95];
+var animCurrentStep = 0;
+
+function startAnimProgress() {
+  animCurrentStep = 0;
+  animProgressSteps = [5, 12, 20, 35, 50, 65, 80, 90, 95];
+  setGenProgress(0, 'Membuat laporan...');
+  if (animProgressIv) clearInterval(animProgressIv);
+
+  var delays = [300, 500, 700, 900, 1100, 1400, 1700, 2200, 3000];
+  var stepIdx = 0;
+  function nextStep() {
+    if (stepIdx >= animProgressSteps.length) return;
+    var p = animProgressSteps[stepIdx];
+    var msgs = [
+      'Menyiapkan data laporan...',
+      'Mengambil informasi unit...',
+      'Menyusun data defect...',
+      'Memproses foto lampiran...',
+      'Membuat halaman laporan...',
+      'Menambahkan marker denah...',
+      'Menyusun layout PDF...',
+      'Finalisasi dokumen...',
+      'Hampir selesai...'
+    ];
+    setGenProgress(p, msgs[stepIdx] || 'Memproses...');
+    stepIdx++;
+    if (stepIdx < animProgressSteps.length) {
+      var d = delays[stepIdx] || 1000;
+      animProgressIv = setTimeout(nextStep, d);
+    }
+  }
+  animProgressIv = setTimeout(nextStep, 200);
+}
+
+function stopAnimProgress() {
+  if (animProgressIv) { clearTimeout(animProgressIv); clearInterval(animProgressIv); animProgressIv = null; }
+}
+
+function setGenProgress(pct, label) {
+  document.getElementById('gen-progress-fill').style.width = pct + '%';
+  document.getElementById('gen-progress-label').textContent = Math.round(pct) + '%';
+  if (label) document.getElementById('gen-progress-subtitle').textContent = label;
+}
+
+function finishAnimProgress(cb) {
+  stopAnimProgress();
+  var steps = [98, 100];
+  var i = 0;
+  function go() {
+    if (i >= steps.length) { if (cb) cb(); return; }
+    setGenProgress(steps[i], i === 0 ? 'Menyimpan file...' : 'Selesai!');
+    i++;
+    setTimeout(go, i === 1 ? 300 : 400);
+  }
+  setGenProgress(95, 'Hampir selesai...');
+  setTimeout(go, 200);
+}
+
+function buildReportPayload() {
+  var payload = { units: [] };
+  for (var i = 0; i < unitBlocks.length; i++) {
+    var ub = unitBlocks[i];
+    var areas = [];
+    for (var j = 0; j < ub.areas.length; j++) {
+      var area = ub.areas[j];
+      var defects = [];
+      for (var k = 0; k < area.defects.length; k++) {
+        var d = area.defects[k];
+        defects.push({
+          desc: d.desc || '',
+          foto_file_id: d.fotoFileId || null,
+          foto_url: d.foto || null,
+          marker: d.marker ? { x: d.marker.x, y: d.marker.y } : null
+        });
+      }
+      areas.push({ area_name: area.areaName || '', defects: defects });
+    }
+    var nomorUnitMatch = String(ub.unit || '').match(/(\d+)/);
+    var nomorUnit = nomorUnitMatch ? String(parseInt(nomorUnitMatch[1], 10)).padStart(2, '0') : '';
+    var nomorLantai = ub.lantai ? String(parseInt(ub.lantai, 10)).padStart(2, '0') : '';
+    payload.units.push({ tower: ub.tower, lantai: ub.lantai || '', unit: ub.unit, date: ub.date, areas: areas, nomor_unit: nomorUnit, nomor_lantai: nomorLantai });
+  }
+  return payload;
+}
+
+async function openGenModal(recovering) {
+  if (!recovering && !validateAll()) return;
+
+  document.getElementById('gen-modal').classList.add('active');
+  document.getElementById('gen-progress-view').style.display = '';
+  document.getElementById('gen-done-view').style.display = 'none';
+  document.getElementById('gen-error-view').style.display = 'none';
+  document.getElementById('gen-progress-title').textContent = 'Membuat Laporan...';
+  setGenProgress(0, 'Menyiapkan...');
+
+  if (recovering) {
+    // Coba recover status dari backend
+    if (jobId) {
+      try {
+        var r = await fetch(api('/status/' + encodeURIComponent(jobId)), { signal: AbortSignal.timeout(5000) });
+        var d = await r.json();
+        if (d.status === 'completed') {
+          finishAnimProgress(showGenDone);
+        } else if (d.status === 'error') {
+          showGenError(d.message || 'Terjadi kesalahan');
+        } else {
+          startAnimProgress();
         }
-    </script>
+      } catch (_) {
+        startAnimProgress();
+      }
+    }
+    return;
+  }
+
+  cancelRequested = false;
+  t0 = Date.now();
+  startAnimProgress();
+
+  try {
+    var res = await fetch(api('/generate-report'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildReportPayload()),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    if (data.success === false) throw new Error(data.message || 'Gagal memulai proses laporan');
+    if (cancelRequested) return;
+
+    jobId = data.job_id || data.jobId || data.id || data.task_id;
+    downloadFileName = data.filename || data.file_name || data.file || data.pdf_file || data.path || null;
+
+    // Selalu treat sebagai selesai jika ada downloadFileName atau success=true atau no job_id (sync)
+    if (data.success === true || downloadFileName || !jobId) {
+      if (!jobId) jobId = downloadFileName || ('sync-' + Date.now());
+      saveSession();
+      finishAnimProgress(showGenDone);
+    } else if (jobId) {
+      // Ada job_id: polling sampai selesai
+      saveSession();
+      pollUntilDone(jobId);
+    } else {
+      throw new Error('Server tidak mengembalikan status selesai');
+    }
+  } catch (err) {
+    stopAnimProgress();
+    showGenError(err.message || 'Tidak dapat terhubung ke server');
+  }
+}
+
+async function pollUntilDone(pollingJobId) {
+  if (pollIv) clearInterval(pollIv);
+  pollIv = setInterval(async function() {
+    if (cancelRequested || jobId !== pollingJobId) { clearInterval(pollIv); pollIv = null; return; }
+    try {
+      var res = await fetch(api('/status/' + encodeURIComponent(pollingJobId)), { signal: AbortSignal.timeout(8000) });
+      var data = await res.json();
+      if (jobId !== pollingJobId || cancelRequested) return;
+      if (data.status === 'completed' || data.success === true) {
+        clearInterval(pollIv); pollIv = null;
+        stopAnimProgress();
+        finishAnimProgress(showGenDone);
+      } else if (data.status === 'error') {
+        clearInterval(pollIv); pollIv = null;
+        stopAnimProgress();
+        showGenError(data.message || data.error || 'Terjadi kesalahan');
+      } else if (data.status === 'cancelled') {
+        clearInterval(pollIv); pollIv = null;
+        stopAnimProgress();
+        closeGenModal();
+        jobId = null; downloadFileName = null;
+        saveSession();
+      }
+    } catch (_) { /* retry on next tick */ }
+  }, 2000);
+}
+
+function showGenDone() {
+  document.getElementById('gen-progress-view').style.display = 'none';
+  document.getElementById('gen-error-view').style.display = 'none';
+  document.getElementById('gen-done-view').style.display = 'block';
+  toast('Laporan berhasil dibuat', 'success');
+}
+
+function showGenError(msg) {
+  document.getElementById('gen-progress-view').style.display = 'none';
+  document.getElementById('gen-done-view').style.display = 'none';
+  document.getElementById('gen-error-view').style.display = 'block';
+  document.getElementById('gen-error-msg').textContent = msg || 'Terjadi kesalahan saat memproses laporan.';
+  toast('Gagal membuat laporan', 'warning');
+}
+
+async function cancelGenerate() {
+  if (!jobId) { closeGenModal(); return; }
+  cancelRequested = true;
+  stopAnimProgress();
+  if (pollIv) { clearInterval(pollIv); pollIv = null; }
+
+  try {
+    var res = await fetch(api('/job/' + encodeURIComponent(jobId)), { method: 'DELETE', signal: AbortSignal.timeout(6000) });
+    if (!res.ok) {
+      await fetch(api('/cancel/' + encodeURIComponent(jobId)), { method: 'POST', signal: AbortSignal.timeout(6000) });
+    }
+  } catch (_) {}
+
+  toast('Proses dibatalkan', 'info');
+  jobId = null; downloadFileName = null;
+  cancelRequested = false;
+  saveSession();
+  closeGenModal();
+}
+
+function retryGenerate() {
+  jobId = null; downloadFileName = null;
+  saveSession();
+  openGenModal(false);
+}
+
+function closeGenModal() {
+  if (jobId && pollIv) {
+    toast('Proses masih berjalan di latar belakang', 'info');
+  }
+  stopAnimProgress();
+  document.getElementById('gen-modal').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════
+//  DOWNLOAD HASIL - GET /download/<job_id>?type=pdf|csv
+// ══════════════════════════════════════════════
+function downloadReportFile(type) {
+  if (!jobId) {
+    toast('Tidak ada laporan untuk diunduh', 'warning');
+    return;
+  }
+  if (downloadFileName) {
+    // Mode SYNC: backend memberi nama/path file langsung
+    window.location = api('/download/' + encodeURIComponent(downloadFileName) + '?type=' + type);
+  } else {
+    // Mode ASYNC: gunakan job_id seperti biasa
+    window.location = api('/download/' + encodeURIComponent(jobId) + '?type=' + type);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SAVE DRAFT
+// ══════════════════════════════════════════════
+function saveDraft() {
+  if (!unitBlocks || unitBlocks.length === 0) {
+    toast('Tidak ada data untuk disimpan', 'warning');
+    return;
+  }
+
+  // Buat nama file dari unit block pertama
+  var ub0 = unitBlocks[0];
+  var towerSlug = (ub0.tower || 'TOWER').replace(/\s+/g, '');
+  var unitSlug = (ub0.unit || 'UNIT').replace(/\s+/g, '');
+  var dateSlug = (ub0.date || new Date().toISOString().slice(0,10)).replace(/-/g, '');
+  var filename = 'OUTSTANDING_' + towerSlug + '_' + unitSlug + '_' + dateSlug + '.json';
+
+  // Kumpulkan semua data termasuk foto (base64)
+  var draftData = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    unitBlocks: unitBlocks.map(function(ub) {
+      return {
+        tower: ub.tower || '',
+        unit: ub.unit || '',
+        date: ub.date || '',
+        areas: (ub.areas || []).map(function(area) {
+          return {
+            areaName: area.areaName || '',
+            defects: (area.defects || []).map(function(d) {
+              return {
+                id: d.id || '',
+                desc: d.desc || '',
+                foto: d.foto || null,        // base64 dataURL
+                fotoFileId: d.fotoFileId || null,
+                marker: d.marker ? {
+                  x: d.marker.x,
+                  y: d.marker.y,
+                  color: d.marker.color || null,
+                  label: d.marker.label || null
+                } : null,
+                markerColor: d.markerColor || null,
+                catatan: d.catatan || ''
+              };
+            })
+          };
+        })
+      };
+    })
+  };
+
+  try {
+    var json = JSON.stringify(draftData, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    toast('Draft disimpan: ' + filename, 'success');
+  } catch (err) {
+    toast('Gagal menyimpan draft: ' + err.message, 'warning');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  LOAD DRAFT
+// ══════════════════════════════════════════════
+function loadDraft(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  input.value = ''; // reset agar bisa pilih file yang sama lagi
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data.unitBlocks || !Array.isArray(data.unitBlocks) || data.unitBlocks.length === 0) {
+        toast('File draft tidak valid atau kosong', 'warning');
+        return;
+      }
+
+      // Pastikan unit-list cache tersedia untuk setiap tower
+      for (var i = 0; i < data.unitBlocks.length; i++) {
+        var tower = data.unitBlocks[i].tower;
+        if (tower) await ensureUnitsLoaded(tower);
+      }
+
+      // Restore state
+      unitBlocks = data.unitBlocks.map(function(ub) {
+        return {
+          id: uid(),
+          tower: ub.tower || '',
+          lantai: ub.lantai || '',
+          unit: ub.unit || '',
+          date: ub.date || '',
+          areas: (ub.areas || []).map(function(area) {
+            return {
+              id: uid(),
+              areaName: area.areaName || '',
+              defects: (area.defects || []).map(function(d) {
+                return {
+                  id: d.id || uid(),
+                  desc: d.desc || '',
+                  foto: d.foto || null,
+                  fotoFileId: d.fotoFileId || null,
+                  marker: d.marker || null,
+                  markerColor: d.markerColor || null,
+                  catatan: d.catatan || '',
+                  fotoUploading: false
+                };
+              })
+            };
+          })
+        };
+      });
+
+      jobId = null;
+      downloadFileName = null;
+      saveSession();
+      renderAllUnits();
+      toast('Draft berhasil dimuat', 'success');
+      // Scroll ke atas
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      toast('Gagal memuat draft: ' + err.message, 'warning');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════════
+//  RESET
+// ══════════════════════════════════════════════
+function confirmReset() {
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9600;display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit;animation:fadeIn 0.2s ease';
+  overlay.innerHTML = [
+    '<div style="background:#fff;border-radius:14px;padding:24px 22px;max-width:360px;width:100%;box-shadow:0 8px 48px rgba(0,0,0,0.25);animation:modalIn 0.22s ease">',
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">',
+        '<div style="width:38px;height:38px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;flex-shrink:0">',
+          '<i class="bi bi-exclamation-triangle-fill" style="color:var(--danger);font-size:17px"></i>',
+        '</div>',
+        '<div style="font-size:15px;font-weight:800;color:var(--text-dark)">Reset Semua Data?</div>',
+      '</div>',
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:22px;line-height:1.5">',
+        'Semua data laporan akan dihapus, termasuk tower, lantai, unit, area, defect, marker, dan foto.<br><br>',
+        '<strong style="color:var(--danger)">Tindakan ini tidak dapat dibatalkan.</strong>',
+      '</div>',
+      '<div style="display:flex;gap:10px">',
+        '<button id="reset-cancel-btn" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;">Batal</button>',
+        '<button id="reset-confirm-btn" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--danger);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Ya, Reset</button>',
+      '</div>',
+    '</div>'
+  ].join('');
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('reset-cancel-btn').onclick = function() { overlay.remove(); };
+  document.getElementById('reset-confirm-btn').onclick = function() {
+    overlay.remove();
+    doReset();
+  };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+}
+
+function doReset() {
+  // Clear state
+  unitBlocks = [];
+  jobId = null;
+  downloadFileName = null;
+  t0 = null;
+  cancelRequested = false;
+  stopAnimProgress();
+  if (pollIv) { clearInterval(pollIv); pollIv = null; }
+
+  // Clear storage
+  try { sessionStorage.clear(); } catch (_) {}
+
+  // Close modal jika terbuka
+  var genModal = document.getElementById('gen-modal');
+  if (genModal) genModal.classList.remove('active');
+
+  // Reset ke kondisi awal
+  addUnitBlock();
+  toast('Semua data berhasil dihapus', 'info');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+</script>
 </body>
 </html>
